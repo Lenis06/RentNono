@@ -1,7 +1,8 @@
 <?php
-    include("database/session.php"); //verifica si tienes o no una sesion iniciada
-    include("database/publicaciones.php"); //muestra las publicaciones
-    include("login.php"); //ventanas emergented de inicio de sesion y registro de usuario
+    include("../database/session.php"); //verifica si tienes o no una sesion iniciada
+    include("../database/publicaciones.php"); //muestra las publicaciones
+    include("../database/session.php");
+    //include("../login.php"); //ventanas emergented de inicio de sesion y registro de usuario
 ?>
 
 <!DOCTYPE html>
@@ -10,8 +11,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RentNono | Inicio</title>
-    <link rel="stylesheet" href="estilos/estilo.css">
-    <link rel="stylesheet" href="estilos/publicaciones.css">
+    <link rel="stylesheet" href="../estilos/estilo.css">
+    <link rel="stylesheet" href="../estilos/publicaciones.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -21,22 +22,22 @@
         <div class="container header-content">
             <h1 class="site-logo">
                 <?php if(isset($_SESSION['nombre'])): ?>
-                    <a href="index.php">Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></a>
+                    <a href="ixusuario.php">Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></a>
                 <?php else: ?>
-                    <a href="index.php">RentNono</a>
+                    <a href="ixusuario.php">RentNono</a>
                 <?php endif; ?>
             </h1>
 
             <nav class="main-nav">
                 <ul>
-                    <li><b href="#" class="btn-primary-small" href="index.php">Inicio</b></li>
-                    <li><a href="explorador.php">Explorar</a></li>
-                    <li><a href="nosotros.php">Nosotros</a></li>
+                    <li><b href="#" class="btn-primary-small" href="ixusuario.php">Inicio</b></li>
+                    <li><a href="erusuario.php">Explorar</a></li>
+                    <li><a href="../nosotros.php">Nosotros</a></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
                     <?php if(isset($_SESSION['nombre'])): ?>
                        
-                        <li><a href="database/logout.php">Cerrar sesión</a></li>
+                        <li><a href="../database/logout.php">Cerrar sesión</a></li>
                     <?php else: ?>
                         <a id="abrirLogin" class="btn-iniciar-sesion">Iniciar sesión</a>
                     <?php endif; ?>
@@ -49,7 +50,7 @@
         <section class="hero-section">
             <div class="hero-text-content">
                 <h2>Encontrá tu hogar
-                    en Nonogasta</h2>
+                    en NonogastaKJDDNFBDKNCNDAVCDNLVNDVC</h2>
                 <p>Una plataforma simple e intuitiva para que alquiles y des en alquiler tus objetos y propiedades de 
                     forma segura y eficiente.</p>              
                 <a href="#" class="btn-primary-large">Alquilar</a>
@@ -89,7 +90,7 @@
                 <?php if (count($publicaciones) > 0): ?>
                     <?php foreach ($publicaciones as $pub): ?>
                         <div class="feature-item">
-                            <img src="media/publicaciones/<?php echo htmlspecialchars($pub['imagen']); ?>" alt="Imagen de <?php echo htmlspecialchars($pub['titulo']); ?>">
+                            <img src="../media/publicaciones/<?php echo htmlspecialchars($pub['imagen']); ?>" alt="Imagen de <?php echo htmlspecialchars($pub['titulo']); ?>">
                             <h4><?php echo htmlspecialchars($pub['titulo']); ?></h4>
                             <p><?php echo htmlspecialchars($pub['descripcion']); ?></p>
                             <p><strong>Precio:</strong> $<?php echo number_format($pub['precio'], 2); ?></p>
@@ -114,8 +115,8 @@
     </footer>
     
     <!--HABILITA VENTANAS FLOTANTES DE LOGIN Y REGISTRO-->
-    <script src="script/login.js"></script>
-    <script src="script/infopub.js"></script>
+    <script src="../script/login.js"></script>
+    <script src="../script/infopub.js"></script>
 
     <!--HABILITA VENTANA FLOTANTE DE MENSAJE DE USUARIO CREADO-->
     <script>

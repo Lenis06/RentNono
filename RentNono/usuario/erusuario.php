@@ -1,6 +1,6 @@
 <?php
-include("database/publicaciones.php");
-include("database/session.php");
+include("../database/session.php");
+include("../database/publicaciones.php");
 
 ?>
 
@@ -9,9 +9,9 @@ include("database/session.php");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RentNono | Explorador</title>
-    <link rel="stylesheet" href="estilos/estilo.css">
-    <link rel="stylesheet" href="estilos/publicaciones.css">
+    <title>RentNono | Explorador de Usuario</title>
+    <link rel="stylesheet" href="../estilos/estilo.css">
+    <link rel="stylesheet" href="../estilos/publicaciones.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a2d9a66f09.js" crossorigin="anonymous"></script>
 </head>
@@ -20,19 +20,15 @@ include("database/session.php");
 <header class="main-header">
     <div class="container header-content">
         <h1 class="site-logo">
-             <?php if(isset($_SESSION['nombre'])): ?>
-                    <a href="index.php">Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></a>
-                <?php else: ?>
-                    <a href="index.php">RentNono</a>
-                <?php endif; ?> 
+            <a href="ixusuario.php">Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></a>
         </h1>
 
         <nav class="main-nav">
             <ul>
-                <li><a href="index.php">Inicio</a></li>
-                <li><b class="btn-primary-small" href="explorador.php">Explorar</b></li>
-                <li><a href="nosotros.php">Nosotros</a></li>
-                <li><a href="database/logout.php">Cerrar sesión</a></li>
+                <li><a href="ixusuario.php">Inicio</a></li>
+                <li><b class="btn-primary-small" href="erusuario.php">Explorar</b></li>
+                <li><a href="nsusuarios.php">Nosotros</a></li>
+                <li><a href="../database/logout.php">Cerrar sesión</a></li>
             </ul>
         </nav>
     </div>
@@ -183,7 +179,7 @@ function cargarPublicaciones() {
     const searchVal = searchInput.value.trim();
     if(searchVal) params += (params ? '&' : '') + `busqueda=${encodeURIComponent(searchVal)}`;
 
-    fetch('database/publicaciones.php?ajax=1&' + params)
+    fetch('../database/publicaciones.php?ajax=1&' + params)
         .then(res => res.text())
         .then(html => {
             featuresGrid.innerHTML = html;

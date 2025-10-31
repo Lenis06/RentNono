@@ -26,7 +26,7 @@ if(isset($_POST['enviarRegistroVisitante'])) {
     $consultaSQL = $conn->query("INSERT INTO usuario_visitante(nombre, correo, password) VALUES ('$nombre','$correo','$pwd')");
     
     // Después de insertar en la base de datos
-    header("Location: index.php?registro=ok");
+    header("Location: ../usuario/ixusuario.php?registro=ok");
     exit();
 }
 

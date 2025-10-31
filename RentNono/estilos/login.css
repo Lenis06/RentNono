@@ -137,8 +137,30 @@ button[type="submit"]:hover {
     animation: fadeIn 0.5s ease;
 }
 
+
+
 /* Animación */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/*ojo de mostarr contraseña*/
+.input-container {
+    position: relative;
+}
+
+.input-container .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #777;
+    transition: color 0.2s;
+}
+
+.input-container .toggle-password:hover {
+    color: #000;
+}
+
