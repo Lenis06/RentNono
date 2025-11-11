@@ -8,7 +8,7 @@ if(isset($_POST['enviarRegistroPropietario'])) {
     $sexo = $_POST['sexo'];
     $dni = $_POST['dni'];
     $correo = $_POST['correo'];
-    $telefono = $_POST['phone'];
+    $telefono = $_POST['telefono'];
     $pwd = $_POST['password'];
 
     $consultaSQL = $conn->query("INSERT INTO usuario_propietario(nombre, sexo, dni, correo, telefono, password) VALUES ('$nombre','$sexo','$dni','$correo','$telefono','$pwd')");

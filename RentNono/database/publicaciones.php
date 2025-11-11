@@ -45,7 +45,7 @@ try {
 // --- Si el archivo se llama mediante AJAX (fetch)
 if (isset($_GET['ajax'])) {
     if (empty($publicaciones)) {
-        echo "<p style='text-align:center;padding:20px;'>No se encontraron resultados con los filtros seleccionados.</p>";
+        echo "<p style='text-align:center;padding:20px;'>No existen datos que coinciden con su busqueda.</p>";
     } else {
         foreach ($publicaciones as $pub) {
             // Imagen por defecto si falta
@@ -54,7 +54,8 @@ if (isset($_GET['ajax'])) {
                 : '/RentNono/media/publicaciones/noimage.png';
 
 
-            echo '<div class="feature-item">';  
+            echo '<div class="feature-item">';
+            echo '  <a href="../database/detalle_publicaciones.php?id=' . htmlspecialchars($pub['id']) . '">';  
             echo '  <div class="card" style="border:1px solid #ddd;border-radius:10px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.1);">';
             echo '      <img src="' . $imagen . '" alt="Imagen de propiedad" style="width:100%;height:200px;object-fit:cover;">';
             echo '      <div class="card-body" style="padding:10px;">';

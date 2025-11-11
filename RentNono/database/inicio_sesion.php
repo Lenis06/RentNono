@@ -7,7 +7,7 @@ if (isset($_POST['iniciarSesion'])) {
     $password = $_POST['password'];
 
     // Primero buscamos en usuario_visitante
-    $stmt = $conn->prepare("SELECT id, nombre, correo FROM usuario_visitante 
+    $stmt = $conn->prepare("SELECT id, nombre, correo, rol FROM usuario_visitante 
                             WHERE correo = :correo AND password = :password");
     $stmt->bindParam(':correo', $correo);
     $stmt->bindParam(':password', $password);
@@ -19,14 +19,14 @@ if (isset($_POST['iniciarSesion'])) {
         $_SESSION['id'] = $usuario['id'];
         $_SESSION['nombre'] = $usuario['nombre'];
         $_SESSION['correo'] = $usuario['correo'];
-        $_SESSION['rol'] = 'visitante';
+        $_SESSION['rol'] = $usuario['rol'];
 
-        header("Location: ../usuario/ixusuario.php");
+        header("Location: ../usuario_visitante/ixusuario.php");
         exit;
     }
 
     // Si no lo encontró, buscamos en usuario_propietario
-    $stmt2 = $conn->prepare("SELECT id, nombre, correo FROM usuario_propietario 
+    $stmt2 = $conn->prepare("SELECT id, nombre, correo,rol FROM usuario_propietario 
                              WHERE correo = :correo AND password = :password");
     $stmt2->bindParam(':correo', $correo);
     $stmt2->bindParam(':password', $password);
@@ -40,7 +40,7 @@ if (isset($_POST['iniciarSesion'])) {
         $_SESSION['correo'] = $usuario['correo'];
         $_SESSION['rol'] = 'propietario';
 
-        header("Location: ../propietario/index.php");
+        header("Location: ../usuario_propietario/index_propietario.php");
         exit;
     }
 

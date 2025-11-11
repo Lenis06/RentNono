@@ -1,4 +1,3 @@
-
 /*LOGIN*/
 .alerta {
     background-color: #4CAF50; /* verde */
@@ -9,6 +8,7 @@
     text-align: center;
 }
 
+/*NUEVOOOOOOOOO*/
 .mensaje-flotante {
     display: none; /* Oculto por defecto */
     position: fixed;
@@ -25,8 +25,7 @@
     text-align: center;
 }
 
-
-/* Fondo Oscuro del Modal */
+/* Fondo Oscuro del Modal *//*REEMPLAZADOOO*/
 .modal-fondo {
     display: none; /* Oculto por defecto */
     position: fixed;
@@ -40,7 +39,7 @@
     align-items: center;
 }
 
-/* Ventana del Login */
+/* Ventana del Login *//*NUEVOOOOO Y REEMPLAZADO*/
 .modal-contenido {
     background: white;
     padding: 20px;
@@ -66,37 +65,100 @@
     cursor: pointer;
 }
 
-/* Estilos del Formulario */
+
+/********* Estilos del Formulario *********/
 form {
     display: flex;
     flex-direction: column;
 }
 
+
+/*NUEVOOOOOOOOO*/
 label {
     margin-top: 10px;
     font-weight: bold;
 }
 
+/*NUEVOOOOOOOOO*//*Diferentes Campos de Datos*/
 input {
     padding: 8px;
-    margin-top: 5px;
+    margin-top: -5px;
     border-radius: 4px;
     border: 1px solid #ccc;
 }
 
+/*CAMPO PARA COMPLETAR FEMENINO/MASCULINO*/
+select {
+     margin-top: -5px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.input-container {
+    position: relative;
+}
+
+/*NUEVO (BOTÓN "ENTRAR")*/
 button[type="submit"] {
     margin-top: 15px;
     padding: 10px;
-    background: #4CAF50;
+    background: #45a049;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
+/*NUEVOOOOOO*/
 button[type="submit"]:hover {
     background: #45a049;
 }
+
+
+/*ESTILOS DE CAMPOS REGISTRAR PROPIETARIO */
+.input-container input,
+.input-container select {
+    width: 100%;
+    color: #333;
+    padding: 9px 35px 9px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background-color: #ffffff;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    appearance: none;
+    height: 38px;
+}
+
+/* Coincidencia visual entre input y select */
+.input-container select {
+    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='12' viewBox='0 0 24 24' width='12' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+
+.input-container input:focus,
+.input-container select:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+
+.input-container i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #777;
+    font-size: 14px;
+}
+
 
 .btn-registrar {
     margin-top: 15px;
@@ -106,6 +168,7 @@ button[type="submit"]:hover {
     border-color: #4CAF50;
     border-radius: 4px;
     cursor: pointer;
+    transition: background 0.3s;
 }
 
 .btn-registrar:hover {
@@ -137,30 +200,8 @@ button[type="submit"]:hover {
     animation: fadeIn 0.5s ease;
 }
 
-
-
 /* Animación */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
-/*ojo de mostarr contraseña*/
-.input-container {
-    position: relative;
-}
-
-.input-container .toggle-password {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #777;
-    transition: color 0.2s;
-}
-
-.input-container .toggle-password:hover {
-    color: #000;
-}
-

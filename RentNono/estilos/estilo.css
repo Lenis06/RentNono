@@ -415,3 +415,124 @@ a:hover {
         margin: 0 10px;
     }
 }
+
+
+
+/*RESEÑASSS*/
+
+/* Contenedor general */
+.rating-container {
+  max-width: 500px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+/* Título */
+.rating-container h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Bloque de estrellas */
+.rating {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+/* Ocultar los inputs */
+.rating input {
+  display: none;
+}
+
+/* Estilo base de cada estrella */
+.rating label {
+  font-size: 36px;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  width: 36px;
+  text-align: center;
+  position: relative;
+}
+
+/* Estrellas llenas */
+.rating label::before {
+  content: "★";
+}
+
+/* Media estrella */
+.rating label.half::before {
+  content: "★";
+  position: absolute;
+  left: 0;
+  width: 50%;
+  overflow: hidden;
+  color: #ffc107;
+}
+
+/* Hover */
+.rating label:hover,
+.rating label:hover ~ label {
+  color: #ffca2c;
+}
+
+/* Selección */
+.rating input:checked ~ label {
+  color: #ffc107;
+}
+
+/* Salida del texto */
+.output {
+  margin-bottom: 15px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Textarea */
+textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: none;
+  height: 90px;
+  font-family: inherit;
+}
+
+/* Botón */
+button {
+  margin-top: 12px;
+  background: #ffc107;
+  color: #333;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: #e0a800;
+}
+
+
+
+
+
+.resultado-promedio {
+  margin-top: 18px;
+  font-weight: 600;
+  color: #444;
+  background: #fff9e6;
+  border-radius: 8px;
+  padding: 10px;
+  display: inline-block;
+}

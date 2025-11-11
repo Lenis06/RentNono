@@ -1,19 +1,10 @@
 <?php
-ob_start(); // inicia el buffer
-include("database/session.php"); //verifica si tienes o no una sesion iniciada
-include("database/publicaciones.php"); //muestra las publicaciones
-include("login.php"); //ventanas emergented de inicio de sesion y registro de usuario
+    include("../database/session.php"); //verifica si tienes o no una sesion iniciada
+    include("../database/publicaciones.php"); //muestra las publicaciones
+    include("../database/session.php");
 
-if (isset($_SESSION['rol'])) {
-    if ($_SESSION['rol'] === 'visitante') {
-        header("Location: usuario_visitante/ixusuario.php");
-        exit;
-    } elseif ($_SESSION['rol'] === 'propietario') {
-        header("Location: usuario_propietario/index_propietario.php");
-        exit;
-    }
-}
-ob_end_flush(); // envía el buffer al navegador
+
+    //include("../login.php"); //ventanas emergented de inicio de sesion y registro de usuario
 ?>
 
 <!DOCTYPE html>
@@ -22,9 +13,10 @@ ob_end_flush(); // envía el buffer al navegador
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RentNono | Inicio</title>
-    <link rel="stylesheet" href="estilos/estilo.css">
-    <link rel="stylesheet" href="estilos/publicaciones.css">
+    <link rel="stylesheet" href="../estilos/estilo.css">
+    <link rel="stylesheet" href="../estilos/publicaciones.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
@@ -33,22 +25,22 @@ ob_end_flush(); // envía el buffer al navegador
         <div class="container header-content">
             <h1 class="site-logo">
                 <?php if(isset($_SESSION['nombre'])): ?>
-                    <a href="index.php">Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></a>
+                    <a href="ixusuario.php">Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></a>
                 <?php else: ?>
-                    <a href="index.php">RentNono</a>
+                    <a href="ixusuario.php">RentNono</a>
                 <?php endif; ?>
             </h1>
 
             <nav class="main-nav">
                 <ul>
-                    <li><b href="#" class="btn-primary-small" href="index.php">Inicio</b></li>
-                    <li><a href="explorador.php">Explorar</a></li>
-                    <li><a href="nosotros.php">Nosotros</a></li>
+                    <li><b href="#" class="btn-primary-small" href="ixusuario.php">Inicio</b></li>
+                    <li><a href="erusuario.php">Explorar</a></li>
+                    <li><a href="../nosotros.php">Nosotros</a></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
                     <?php if(isset($_SESSION['nombre'])): ?>
                        
-                        <li><a href="database/logout.php">Cerrar sesión</a></li>
+                        <li><a href="../database/logout.php">Cerrar sesión</a></li>
                     <?php else: ?>
                         <a id="abrirLogin" class="btn-iniciar-sesion">Iniciar sesión</a>
                     <?php endif; ?>
@@ -61,7 +53,7 @@ ob_end_flush(); // envía el buffer al navegador
         <section class="hero-section">
             <div class="hero-text-content">
                 <h2>Encontrá tu hogar
-                    en Nonogasta</h2>
+                    en NonogastaKJDDNFBDKNCNDAVCDNLVNDVC</h2>
                 <p>Una plataforma simple e intuitiva para que alquiles y des en alquiler tus objetos y propiedades de 
                     forma segura y eficiente.</p>              
                 <a href="#" class="btn-primary-large">Alquilar</a>
@@ -101,7 +93,7 @@ ob_end_flush(); // envía el buffer al navegador
                 <?php if (count($publicaciones) > 0): ?>
                     <?php foreach ($publicaciones as $pub): ?>
                         <div class="feature-item">
-                            <img src="media/publicaciones/<?php echo htmlspecialchars($pub['imagen']); ?>" alt="Imagen de <?php echo htmlspecialchars($pub['titulo']); ?>">
+                            <img src="../media/publicaciones/<?php echo htmlspecialchars($pub['imagen']); ?>" alt="Imagen de <?php echo htmlspecialchars($pub['titulo']); ?>">
                             <h4><?php echo htmlspecialchars($pub['titulo']); ?></h4>
                             <p><?php echo htmlspecialchars($pub['descripcion']); ?></p>
                             <p><strong>Precio:</strong> $<?php echo number_format($pub['precio'], 2); ?></p>
@@ -126,8 +118,8 @@ ob_end_flush(); // envía el buffer al navegador
     </footer>
     
     <!--HABILITA VENTANAS FLOTANTES DE LOGIN Y REGISTRO-->
-    <script src="script/login.js"></script>
-    <script src="script/infopub.js"></script>
+    <script src="../script/login.js"></script>
+    <script src="../script/infopub.js"></script>
 
     <!--HABILITA VENTANA FLOTANTE DE MENSAJE DE USUARIO CREADO-->
     <script>
@@ -144,5 +136,26 @@ ob_end_flush(); // envía el buffer al navegador
             <?php endif; ?>
         });
     </script>
+    <script>
+document.querySelectorAll('.fav-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.dataset.id;
+    btn.classList.toggle('active');
+    btn.querySelector('i').classList.toggle('fas');
+    btn.querySelector('i').classList.toggle('far');
+
+    const formData = new FormData();
+    formData.append('id_propiedad', id);
+
+    const res = await fetch('/RentNono/favorito_toggle.php', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    console.log(data);
+  });
+});
+</script>
+ 
 </body>
 </html>
