@@ -243,6 +243,94 @@ button {
   .container { padding: 20px; }
   th, td { padding: 10px; font-size: 0.85rem; }
 }
+/*header */
+/* 🔔 NOTIFICACIONES */
+.notif-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.notif-container i {
+  font-size: 1.5rem;
+  color: white;
+  transition: transform 0.2s;
+}
+
+.notif-container i:hover {
+  transform: scale(1.1);
+}
+
+.notif-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 7px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.notif-dropdown {
+  display: none;
+  position: absolute;
+  top: 35px;
+  right: 0;
+  background: white;
+  color: #333;
+  width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+.notif-dropdown h4 {
+  background: var(--verde-principal);
+  color: white;
+  padding: 10px;
+  margin: 0;
+  border-radius: 8px 8px 0 0;
+}
+
+.notif-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.notif-item.leido {
+  opacity: 0.6;
+}
+
+.notif-item strong {
+  display: block;
+  color: var(--verde-oscuro);
+}
+
+.notif-item p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+.mark-read-btn {
+  display: block;
+  text-align: center;
+  padding: 8px;
+  background: var(--verde-principal);
+  color: white;
+  text-decoration: none;
+  border-radius: 0 0 8px 8px;
+  font-weight: bold;
+}
+.mark-read-btn:hover {
+  opacity: 0.9;
+}
+.no-notif {
+  padding: 10px;
+  text-align: center;
+  color: #666;
+}
+
 </style>
 </head>
 <body>
@@ -250,13 +338,43 @@ button {
 <header class="admin-navbar">
   <h1>RENTNONO</h1>
   <div class="nav-options">
-    <span>¡Bienvenid@, <strong><?= htmlspecialchars($_SESSION['admin_nombre'] ?? 'Administrador'); ?></strong>!</span>
-    <?php if (!empty($_SESSION['admin_foto'])): ?>
-      <img src="../uploads/<?= htmlspecialchars($_SESSION['admin_foto']); ?>" alt="Foto de perfil">
+  <span>¡Bienvenid@, <strong><?= htmlspecialchars($_SESSION['admin_nombre'] ?? 'Administrador'); ?></strong>!</span>
+
+  <!-- 🔔 Notificaciones -->
+  <?php
+    $stmtNotif = $conn->query("SELECT * FROM notificaciones ORDER BY fecha DESC LIMIT 10");
+    $notificaciones = $stmtNotif->fetchAll(PDO::FETCH_ASSOC);
+    $noLeidas = array_filter($notificaciones, fn($n) => !$n['leido']);
+  ?>
+  <div class="notif-container">
+    <i class="fa-solid fa-bell" id="notifIcon"></i>
+    <?php if (count($noLeidas) > 0): ?>
+      <span class="notif-count"><?= count($noLeidas); ?></span>
     <?php endif; ?>
-    <a href="#" onclick="openProfileModal()"><i class="fa-solid fa-user-pen"></i></a>
-    <a href="logout_admin.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+    <div class="notif-dropdown" id="notifDropdown">
+      <h4>Notificaciones</h4>
+      <?php if (empty($notificaciones)): ?>
+        <p class="no-notif">Sin notificaciones</p>
+      <?php else: ?>
+        <?php foreach ($notificaciones as $n): ?>
+          <div class="notif-item <?= $n['leido'] ? 'leido' : ''; ?>">
+            <strong><?= htmlspecialchars($n['titulo']); ?></strong>
+            <p><?= htmlspecialchars($n['mensaje']); ?></p>
+            <small><?= date('d/m/Y H:i', strtotime($n['fecha'])); ?></small>
+          </div>
+        <?php endforeach; ?>
+        <a href="marcar_leidas.php" class="mark-read-btn">Marcar todas como leídas</a>
+      <?php endif; ?>
+    </div>
   </div>
+
+  <?php if (!empty($_SESSION['admin_foto'])): ?>
+    <img src="../uploads/<?= htmlspecialchars($_SESSION['admin_foto']); ?>" alt="Foto de perfil">
+  <?php endif; ?>
+  <a href="#" onclick="openProfileModal()"><i class="fa-solid fa-user-pen"></i></a>
+  <a href="logout_admin.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+</div>
+
 </header>
 
 <div class="container">
@@ -369,6 +487,18 @@ function openEditModal(id, nombre, correo, telefono, tabla) {
 function closeEditModal() {
   document.getElementById("editModal").style.display = "none";
 }
+// 🔔 Mostrar/ocultar notificaciones
+document.getElementById('notifIcon').addEventListener('click', () => {
+  const dropdown = document.getElementById('notifDropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+});
+
+window.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('notifDropdown');
+  if (!e.target.closest('.notif-container')) dropdown.style.display = 'none';
+});
+
 </script>
 </body>
 </html>
+

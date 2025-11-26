@@ -24,6 +24,7 @@ ob_end_flush(); // envía el buffer al navegador
     <title>RentNono | Inicio</title>
     <link rel="stylesheet" href="estilos/estilo.css">
     <link rel="stylesheet" href="estilos/publicaciones.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -42,7 +43,7 @@ ob_end_flush(); // envía el buffer al navegador
             <nav class="main-nav">
                 <ul>
                     <li><b href="#" class="btn-primary-small" href="index.php">Inicio</b></li>
-                    <li><a href="explorador.php">Explorar</a></li>
+                    <li><a href="explorador.php">Explorar Propiedades</a></li>
                     <li><a href="nosotros.php">Nosotros</a></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
@@ -64,35 +65,43 @@ ob_end_flush(); // envía el buffer al navegador
                     en Nonogasta</h2>
                 <p>Una plataforma simple e intuitiva para que alquiles y des en alquiler tus objetos y propiedades de 
                     forma segura y eficiente.</p>              
-                <a href="#" class="btn-primary-large">Alquilar</a>
-                <a href="#" class="btn-primary-large">Comprar</a>
-                <a href="#" class="btn-primary-large">Vender</a>
-                <section class="features-section container">
-                    <div class="features-grid">
-                        <div class="feature-item">
-                            <p>Accede como usuario registrado y podras comentar</p>
-                        </div>
-                        <div class="feature-item">
-                            <p>Contactate con el propietrario</p>
-                        </div>
-                        <div class="feature-item">
-                            <p>Crea tu lista de favoritos</p>
-                        </div>
-                    </div>
-                </section>            
-            </div>
-            <div class="search-box">
-                <input list="opciones" type="text" id="buscar" placeholder="Escribe para buscar...">
-                <datalist id="opciones">
-                    <option value="Casa en alquiler">
-                    <option value="Departamento en venta">
-                    <option value="Terreno en Nonogasta">
-                    <option value="Oficina comercial">
-                    <option value="Cabaña turística">
-                </datalist>
-                <button type="button" class="icon" id="btnBuscar">🔍</button>
-            </div>
-        </section>
+        
+        <!-- 🔍 BUSCADOR POR PRECIO -->
+<section class="buscador-precio container" style="margin-top:30px;">
+    <h3>Filtrar por precio</h3>
+
+    <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+        <div>
+            <label>Precio mínimo</label>
+            <input type="number" id="precio_min" placeholder="Ej: 100000" style="padding:8px;">
+        </div>
+
+        <div>
+            <label>Precio máximo</label>
+            <input type="number" id="precio_max" placeholder="Ej: 300000" style="padding:8px;">
+        </div>
+
+        <button id="btnFiltrar" style="padding:10px 20px; cursor:pointer; background:#2d6cdf; border:none; color:white; border-radius:5px;">
+            Aplicar filtros
+        </button>
+
+        <button id="btnReset" style="padding:10px 20px; cursor:pointer; background:#777; border:none; color:white; border-radius:5px;">
+            Reiniciar
+        </button>
+    </div>
+</section>
+
+
+<section class="features-section container" style="margin-top:20px;">
+    <h3>Publicaciones</h3>
+
+    <div class="features-grid" id="gridIndex"></div>
+
+    <p id="mensajeVacio" style="display:none; text-align:center; padding:20px;">
+        No existen publicaciones en ese rango de precio.
+    </p>
+</section>
+</section>
 
         <!--SECCION DE PUBLICACIONES-->
         <section class="features-section container">
@@ -144,5 +153,80 @@ ob_end_flush(); // envía el buffer al navegador
             <?php endif; ?>
         });
     </script>
+
+    <script>
+// Cambia esto según tu sistema de login
+const usuarioLogueado = <?php echo isset($_SESSION['usuario']) ? 'true' : 'false'; ?>;
+
+function toggleFavorito(idPublicacion) {
+    if (!usuarioLogueado) {
+        window.location.href = "login.php"; 
+        return;
+    }
+
+    const btn = event.currentTarget;
+    btn.classList.toggle("active");
+
+    // Enviar a backend (si querés guardar favoritos de verdad)
+    /*
+    fetch("guardar_favorito.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "id=" + idPublicacion
+    });
+    */
+}
+</script>
+<script>
+
+
+// 🌟 Contenedores
+const gridIndex = document.getElementById("gridIndex");
+const mensajeVacio = document.getElementById("mensajeVacio");
+
+// Inputs
+const precioMin = document.getElementById("precio_min");
+const precioMax = document.getElementById("precio_max");
+
+const btnFiltrar = document.getElementById("btnFiltrar");
+const btnReset = document.getElementById("btnReset");
+
+// 🔄 Función para cargar publicaciones
+function cargarPublicaciones() {
+
+    let params = [];
+
+    if (precioMin.value) params.push("precio_min=" + encodeURIComponent(precioMin.value));
+    if (precioMax.value) params.push("precio_max=" + encodeURIComponent(precioMax.value));
+
+    let url = "database/publicaciones.php?ajax=1&" + params.join("&");
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+            gridIndex.innerHTML = html;
+
+            if (html.trim() === "" || html.includes("No existen")) {
+                mensajeVacio.style.display = "block";
+            } else {
+                mensajeVacio.style.display = "none";
+            }
+        });
+}
+
+// ▶️ Botón "Aplicar filtros"
+btnFiltrar.addEventListener("click", cargarPublicaciones);
+
+// 🔄 Botón "Reiniciar"
+btnReset.addEventListener("click", () => {
+    precioMin.value = "";
+    precioMax.value = "";
+    cargarPublicaciones();
+});
+
+// ▶️ Cargar al iniciar
+document.addEventListener("DOMContentLoaded", cargarPublicaciones);
+</script>
+
 </body>
 </html>

@@ -83,9 +83,8 @@ if (isset($_POST['agregarPropiedad'])) {
             <nav class="main-nav">
                 <ul>
                     <li><b href="#" class="btn-primary-small" href="index_propietario.php">Inicio</b></li>
-                    <li><a href="../usuario_visitante/erusuario.php">Explorar</a></li>
-                    <li><a href="../nosotros.php">Nosotros</a></li>
-                    
+                    <li><a href="../usuario_visitante/erusuario.php">Explorar Propiedades</a></li>
+
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
                     <?php if(isset($_SESSION['nombre'])): ?>
                        

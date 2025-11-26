@@ -30,7 +30,7 @@ include("login.php");
         <nav class="main-nav">
                 <ul>
                     <li><a href="index.php">Inicio</a></li>
-                    <li><b href="#" class="btn-primary-small" href="explorador.php">Explorar</b></li>
+                    <li><b href="#" class="btn-primary-small" href="explorador.php">Explorar Propiedades</b></li>
                     <li><a href="nosotros.php">Nosotros</a></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
@@ -44,10 +44,6 @@ include("login.php");
     </div>
 </header>
 
-<!-- 🔍 BUSCADOR -->
-<section class="buscador container">
-  <input type="text" id="searchInput" placeholder="Buscar por título o descripción...">
-</section>
 
 <!-- 🏡 FILTROS -->
 <section class="filtros container">
@@ -69,10 +65,7 @@ include("login.php");
           <option value="">Todos</option>
           <option value="casa">Casa</option>
           <option value="departamento">Departamento</option>
-          <option value="local comercial">Local Comercial</option>
           <option value="terreno o lote">Terreno o Lote</option>
-          <option value="galpon">Galpón</option>
-          <option value="camping">Camping</option>
         </select>
       </div>
 
@@ -177,17 +170,13 @@ const filtros = ['operacion','tipo','estado','garaje','precio_max','ambientes','
 const featuresGrid = document.getElementById('featuresGrid');
 const reiniciarBtn = document.getElementById('reiniciarFiltros');
 const noResultsMessage = document.getElementById('noResultsMessage');
-const searchInput = document.getElementById('searchInput');
 
-// 🎯 Cargar publicaciones filtradas y búsqueda
+// 🎯 Cargar publicaciones filtradas
 function cargarPublicaciones() {
     let params = filtros.map(f => {
         const val = document.getElementById(f).value;
         return val ? `${f}=${encodeURIComponent(val)}` : '';
     }).filter(p => p !== '').join('&');
-
-    const searchVal = searchInput.value.trim();
-    if(searchVal) params += (params ? '&' : '') + `busqueda=${encodeURIComponent(searchVal)}`;
 
     fetch('database/publicaciones.php?ajax=1&' + params)
         .then(res => res.text())
@@ -215,22 +204,16 @@ filtros.forEach(f => {
     if(el) el.addEventListener('change', cargarPublicaciones);
 });
 
-// Buscador en tiempo real
-searchInput.addEventListener('input', () => {
-    clearTimeout(searchInput._timer);
-    searchInput._timer = setTimeout(cargarPublicaciones, 300);
-});
-
 // Botón reiniciar
 reiniciarBtn.addEventListener('click', () => {
     filtros.forEach(f => document.getElementById(f).value = '');
-    searchInput.value = '';
     cargarPublicaciones();
 });
 
 // Carga inicial
 document.addEventListener('DOMContentLoaded', cargarPublicaciones);
 </script>
+
 
 <!--HABILITA VENTANAS FLOTANTES DE LOGIN Y REGISTRO-->
     <script src="script/login.js"></script>

@@ -34,8 +34,7 @@
             <nav class="main-nav">
                 <ul>
                     <li><b href="#" class="btn-primary-small" href="ixusuario.php">Inicio</b></li>
-                    <li><a href="erusuario.php">Explorar</a></li>
-                    <li><a href="../nosotros.php">Nosotros</a></li>
+                    <li><a href="erusuario.php">Explorar Propiedades</a></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
                     <?php if(isset($_SESSION['nombre'])): ?>

@@ -3,6 +3,7 @@
     include("database/inicio_sesion.php");
 
     $error = isset($_GET['error']) ? $_GET['error'] : "";
+    
 ?>
 
 <link rel="stylesheet" href="estilos/login.css">
@@ -233,5 +234,15 @@ document.getElementById("usuarioLogin").addEventListener("blur", function() {
         if (!valido) e.preventDefault();
     });
 });
+// ABRIR MODAL DESDE EL CORAZÓN
+document.addEventListener("click", function (e) {
+
+    // Si el elemento clickeado tiene la clase btn-fav
+    if (e.target.classList.contains("btn-fav")) {
+        const modal = document.getElementById("modalLogin");
+        modal.style.display = "flex";  // Mostrar ventana emergente
+    }
+});
+
 </script>
 

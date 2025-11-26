@@ -194,43 +194,6 @@ include("conexion.php");
   </form>
 </div>
 
-<script>
-const rating = document.getElementById("rating");
-const output = document.getElementById("output");
-
-rating.addEventListener("change", (e) => {
-  output.textContent = `Puntuación seleccionada: ${e.target.value} ★`;
-});
-</script>
-
-<?php
-$propiedad_id = $id;
-
-$query = $conn->prepare("SELECT AVG(rating) AS promedio, COUNT(*) AS total 
-                         FROM opiniones 
-                         WHERE propiedad_id = :id AND aprobado = 1");
-$query->bindParam(':id', $propiedad_id, PDO::PARAM_INT);
-$query->execute();
-
-$data = $query->fetch(PDO::FETCH_ASSOC);
-$promedio = $data && $data["promedio"] ? round($data["promedio"], 1) : 0;
-$total = $data && $data["total"] ? $data["total"] : 0;
-
-if ($total > 0) {
-    echo "<div class='resultado-promedio' 
-            style='margin-top:15px; text-align:center; font-weight:bold; color:#333;'>
-            ⭐ Promedio: <strong>$promedio / 5</strong> ($total reseñas)
-          </div>";
-} else {
-    echo "<div class='resultado-promedio' 
-            style='margin-top:15px; text-align:center; color:#666;'>
-            Aún no hay reseñas aprobadas 😄
-          </div>";
-}
-?>
-
-
-
 
             <div class="descripcion">
                 <h3>Descripción completa</h3>
