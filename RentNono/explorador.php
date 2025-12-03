@@ -1,6 +1,6 @@
 <?php
-include("database/publicaciones.php");
 include("database/session.php");
+include("database/publicaciones.php");
 include("login.php"); 
 ?>
 
@@ -16,6 +16,8 @@ include("login.php");
     <script src="https://kit.fontawesome.com/a2d9a66f09.js" crossorigin="anonymous"></script>
 </head>
 <body>
+<div id="mensajeExito" class="mensaje-exito" style="display:none;">
+</div>
 
 <header class="main-header">
     <div class="container header-content">

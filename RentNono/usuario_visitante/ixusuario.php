@@ -6,6 +6,20 @@
 
     //include("../login.php"); //ventanas emergented de inicio de sesion y registro de usuario
 ?>
+<?php
+include("conexion.php");
+session_start();
+
+$id_usuario = $_SESSION["id_usuario"];
+
+$sql = $conn->prepare("SELECT propiedades.* 
+                       FROM favoritos 
+                       JOIN propiedades ON favoritos.id_publicacion = propiedades.id
+                       WHERE favoritos.id_usuario = ?");
+$sql->execute([$id_usuario]);
+
+$favs = $sql->fetchAll(PDO::FETCH_ASSOC);
+?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -52,23 +66,11 @@
         <section class="hero-section">
             <div class="hero-text-content">
                 <h2>Encontrá tu hogar
-                    en NonogastaKJDDNFBDKNCNDAVCDNLVNDVC</h2>
+                    en Nonogasta</h2>
                 <p>Una plataforma simple e intuitiva para que alquiles y des en alquiler tus objetos y propiedades de 
                     forma segura y eficiente.</p>              
-                <a href="#" class="btn-primary-large">Alquilar</a>
-                <a href="#" class="btn-primary-large">Comprar</a>
-                <a href="#" class="btn-primary-large">Vender</a>
                 <section class="features-section container">
                     <div class="features-grid">
-                        <div class="feature-item">
-                            <p>Accede como usuario registrado y podras comentar</p>
-                        </div>
-                        <div class="feature-item">
-                            <p>Contactate con el propietrario</p>
-                        </div>
-                        <div class="feature-item">
-                            <p>Crea tu lista de favoritos</p>
-                        </div>
                     </div>
                 </section>            
             </div>

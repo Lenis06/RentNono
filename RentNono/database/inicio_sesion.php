@@ -24,6 +24,19 @@ if (isset($_POST['iniciarSesion'])) {
         $_SESSION['correo'] = $usuario['correo'];
         $_SESSION['rol'] = 'visitante'; // Se asigna manualmente
 
+        // 🧾 LOG: inicio de sesión visitante
+$log = $conn->prepare("
+INSERT INTO logs_actividad (usuario_id, usuario_nombre, rol, accion)
+VALUES (:id, :nombre, :rol, :accion)
+");
+
+$log->execute([
+':id' => $_SESSION['id'],
+':nombre' => $_SESSION['nombre'],
+':rol' => 'visitante',
+':accion' => 'Inicio de sesión'
+]);
+
 
         header("Location: ../usuario_visitante/ixusuario.php");
         exit;
@@ -45,6 +58,19 @@ if (isset($_POST['iniciarSesion'])) {
         $_SESSION['nombre'] = $usuario['nombre'];
         $_SESSION['correo'] = $usuario['correo'];
         $_SESSION['rol'] = 'propietario'; // Se asigna manualmente
+
+        // 🧾 LOG: inicio de sesión propietario
+$log = $conn->prepare("
+INSERT INTO logs_actividad (usuario_id, usuario_nombre, rol, accion)
+VALUES (:id, :nombre, :rol, :accion)
+");
+
+$log->execute([
+':id' => $_SESSION['id'],
+':nombre' => $_SESSION['nombre'],
+':rol' => 'propietario',
+':accion' => 'Inicio de sesión'
+]);
 
 
         header("Location: ../usuario_propietario/index_propietario.php");
@@ -68,8 +94,20 @@ if (isset($_POST['iniciarSesion'])) {
             $_SESSION['admin_nombre'] = $usuario['nombre'];
             $_SESSION['rol'] = 'admin';
 
+            // 🧾 LOG: inicio de sesión administrador
+$log = $conn->prepare("
+INSERT INTO logs_actividad (usuario_id, usuario_nombre, rol, accion)
+VALUES (:id, :nombre, :rol, :accion)
+");
 
-            header("Location: ../admin/users.php");
+$log->execute([
+':id' => $_SESSION['admin_id'],
+':nombre' => $_SESSION['admin_nombre'],
+':rol' => 'admin',
+':accion' => 'Inicio de sesión'
+]);
+
+            header("Location: ../admin/indexadmin.php");
             exit;
         }
     }
@@ -80,6 +118,5 @@ if (isset($_POST['iniciarSesion'])) {
     exit();
 }
 ?>
-
 
 

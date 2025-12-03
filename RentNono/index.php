@@ -44,7 +44,6 @@ ob_end_flush(); // envía el buffer al navegador
                 <ul>
                     <li><b href="#" class="btn-primary-small" href="index.php">Inicio</b></li>
                     <li><a href="explorador.php">Explorar Propiedades</a></li>
-                    <li><a href="nosotros.php">Nosotros</a></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
                     <?php if(isset($_SESSION['nombre'])): ?>
@@ -226,6 +225,48 @@ btnReset.addEventListener("click", () => {
 
 // ▶️ Cargar al iniciar
 document.addEventListener("DOMContentLoaded", cargarPublicaciones);
+</script>
+<script>
+let isLoggedIn = <?= isset($_SESSION["id_usuario"]) ? "true" : "false" ?>;
+
+// Esta función controla el click en el corazon ❤️
+function handleFavClick(id, event) {
+
+    event.stopPropagation(); // Evita abrir la publicación
+    event.preventDefault();  // Evita ejecutar el <a>
+
+    if (!isLoggedIn) {
+        // Abre tu modal de login (ya dijiste que lo tenés)
+        document.getElementById("ventanaLogin").style.display = "block";
+        return;
+    }
+
+    // Guardar favorito en BD con AJAX
+    fetch("/RentNono/database/favoritos_guardar.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "id_publicacion=" + id
+    })
+    .then(res => res.text())
+    .then(data => {
+        mostrarMensajeFavorito();
+    });
+}
+
+function mostrarMensajeFavorito() {
+    const msg = document.getElementById("mensajeExito");
+    msg.style.display = "block";
+    msg.innerHTML = "Guardado en favoritos ❤️";
+
+    setTimeout(() => {
+        msg.style.display = "none";
+    }, 2000);
+}
+if (!isLoggedIn) {
+    document.getElementById("ventanaLogin").style.display = "block";
+    return;
+}
+
 </script>
 
 </body>

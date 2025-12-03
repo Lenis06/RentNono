@@ -67,24 +67,29 @@ if (isset($_GET['ajax'])) {
                 : '/RentNono/media/publicaciones/noimage.png';
 
             echo '<div class="feature-item">';
-            echo '  <a href="../database/detalle_publicaciones.php?id=' . htmlspecialchars($pub['id']) . '">';  
             echo '  <div class="card" style="border:1px solid #ddd;border-radius:10px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.1);position:relative;">';
 
-            // ❤️ Botón de favoritos
+            // ❤️ Botón de favoritos (FUERA DEL <a>)
             echo '<div class="fav-btn">';
-            echo '   <i class="fa-regular fa-heart btn-fav" data-id="' . htmlspecialchars($pub['id']) . '"></i>';
+            echo '   <i class="fa-regular fa-heart btn-fav"
+                        data-id="' . htmlspecialchars($pub['id']) . '"
+                        onclick="handleFavClick(' . $pub['id'] . ', event)">
+                    </i>';
             echo '</div>';
 
 
+            // El link a la publicación ↓
+            echo '  <a href="/RentNono/database/detalle_publicaciones.php?id=' . htmlspecialchars($pub['id']) . '">';  
             echo '      <img src="' . $imagen . '" alt="Imagen de propiedad" style="width:100%;height:200px;object-fit:cover;">';
             echo '      <div class="card-body" style="padding:10px;">';
             echo '          <h4 style="margin:0;font-size:18px;">' . htmlspecialchars($pub['titulo']) . '</h4>';
             echo '          <p style="margin:5px 0;color:#666;">' . htmlspecialchars($pub['descripcion']) . '</p>';
             echo '      </div>';
-
-            echo '  </div>';
             echo '  </a>';
-            echo '</div>';
+
+            echo '  </div>'; // card
+            echo '</div>';  // feature-item
+
 
              //echo '          <p><strong>Tipo:</strong> ' . htmlspecialchars($pub['tipo']) . '</p>';
              //echo '          <p><strong>Operación:</strong> ' . htmlspecialchars($pub['operacion']) . '</p>';

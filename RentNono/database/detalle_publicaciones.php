@@ -122,22 +122,32 @@ include("conexion.php");
 </head>
 
 <body>
-    <header class="main-header">
+<header class="main-header">
     <div class="container header-content">
         <h1 class="site-logo">
-                <a href="javascript:history.back()" class="volver">← Volver</a>
+            <a href="javascript:history.back()" class="volver">← Volver</a>
         </h1>
 
         <nav class="main-nav">
             <ul>
-                <li><a href="ixusuario.php">Inicio</a></li>
-                <li><b class="btn-primary-small" href="erusuario.php">Explorar</b></li>
-                <li><a href="nsusuarios.php">Nosotros</a></li>
-                <li><a href="../database/logout.php">Cerrar sesión</a></li>
+                <?php if (isset($_SESSION['nombre'])): ?>
+                    <!-- MENÚ PARA USUARIO LOGUEADO -->
+                    <li><a href="ixusuario.php">Inicio</a></li>
+                    <li><a href="erusuario.php">Explorar</a></li>
+                    <li><a href="nsusuarios.php">Nosotros</a></li>
+                    <li><a href="../database/logout.php">Cerrar sesión</a></li>
+                <?php else: ?>
+                    <!-- MENÚ PÚBLICO -->
+                    <li><a href="../index.php">Inicio</a></li>
+                    <li><a href="../explorador.php">Explorar</a></li>
+                    <li><a href="../nosotros.php">Nosotros</a></li>
+                    <li><a href="../login.php">Iniciar sesión</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </div>
 </header>
+
 
     <div class="detalle-container">
         <img src="<?= $imagen ?>" alt="Imagen de la propiedad">
