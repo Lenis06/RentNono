@@ -1,7 +1,11 @@
 <?php
-include("database/session.php");
 include("database/publicaciones.php");
+include("database/session.php");
 include("login.php"); 
+
+// Verificar si el usuario está logueado como visitante
+$es_visitante = isset($_SESSION['rol']) && $_SESSION['rol'] === 'visitante';
+$usuario_id = $_SESSION['id'] ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -16,8 +20,6 @@ include("login.php");
     <script src="https://kit.fontawesome.com/a2d9a66f09.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<div id="mensajeExito" class="mensaje-exito" style="display:none;">
-</div>
 
 <header class="main-header">
     <div class="container header-content">
@@ -32,20 +34,18 @@ include("login.php");
         <nav class="main-nav">
                 <ul>
                     <li><a href="index.php">Inicio</a></li>
-                    <li><b href="#" class="btn-primary-small" href="explorador.php">Explorar Propiedades</b></li>
-                    <li><a href="nosotros.php">Nosotros</a></li>
+                    <li><b href="#" class="btn-primary-small">Explorar Propiedades</b></li>
                     
                     <!-- NOMBRE DE USUARIO O BOTON INICIAR SESION-->
                     <?php if(isset($_SESSION['nombre'])): ?>
-                       
                         <li><a href="database/logout.php">Cerrar sesión</a></li>
                     <?php else: ?>
                         <a id="abrirLogin" class="btn-iniciar-sesion">Iniciar sesión</a>
                     <?php endif; ?>
+                </ul>
         </nav>
     </div>
 </header>
-
 
 <!-- 🏡 FILTROS -->
 <section class="filtros container">
@@ -153,7 +153,9 @@ include("login.php");
   <div class="features-grid" id="featuresGrid">
     <!-- Se llenará dinámicamente con fetch -->
   </div>
-  <p id="noResultsMessage" style="display:none;text-align:center;padding:20px;">No existen publicaciones que coincidan con tu búsqueda</p>
+  <p id="noResultsMessage" style="display:none;text-align:center;padding:20px;">
+    No existen publicaciones que coincidan con tu búsqueda
+  </p>
 </section>
 
 <footer class="main-footer">
@@ -168,6 +170,10 @@ include("login.php");
 
 <!-- ⚙️ Script de filtros, búsqueda y reinicio -->
 <script>
+// Variables globales para el estado de sesión
+const estaLogueado = <?php echo isset($_SESSION['id']) ? 'true' : 'false'; ?>;
+const esVisitante = <?php echo $es_visitante ? 'true' : 'false'; ?>;
+
 const filtros = ['operacion','tipo','estado','garaje','precio_max','ambientes','dormitorios','sanitarios'];
 const featuresGrid = document.getElementById('featuresGrid');
 const reiniciarBtn = document.getElementById('reiniciarFiltros');
@@ -184,7 +190,14 @@ function cargarPublicaciones() {
         .then(res => res.text())
         .then(html => {
             featuresGrid.innerHTML = html;
-
+            
+            // Agregar eventos a los botones de favorito después de cargar
+            agregarEventosFavoritos();
+            
+            // Agregar eventos a los enlaces de las publicaciones
+            agregarEventosEnlaces();
+            
+            // Efecto visual
             featuresGrid.style.opacity = 0;
             setTimeout(() => {
                 featuresGrid.style.opacity = 1;
@@ -198,6 +211,119 @@ function cargarPublicaciones() {
             }
         })
         .catch(err => console.error('Error al cargar publicaciones:', err));
+}
+
+// Función para agregar eventos a los botones de favorito
+// Función para agregar eventos a los botones de favorito
+function agregarEventosFavoritos() {
+    document.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const idPublicacion = this.dataset.id;
+            
+            if (!estaLogueado || !esVisitante) {
+                // Abrir ventana de login si no está logueado
+                const modalLogin = document.getElementById('modalFondoLogin');
+                if (modalLogin) {
+                    modalLogin.style.display = 'flex';
+                }
+                return;
+            }
+            
+            // Determinar la acción basada en el estado ACTUAL
+            const esFavoritoActual = this.classList.contains('active');
+            
+            // CORRECCIÓN: Toggle visual del botón
+            this.classList.toggle('active');
+            this.classList.add('animating');
+            
+            // CORRECCIÓN: Cambiar icono correctamente
+            const icon = this.querySelector('i');
+            if (this.classList.contains('active')) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+            } else {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+            }
+            
+            // Determinar acción para el servidor
+            const accion = esFavoritoActual ? 'eliminar' : 'agregar';
+            
+            // Enviar petición al servidor
+            fetch('database/favoritos.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `accion=toggle&id_publicacion=${idPublicacion}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    // Revertir visualmente si hay error
+                    this.classList.toggle('active');
+                    icon.classList.toggle('fa-regular');
+                    icon.classList.toggle('fa-solid');
+                } else {
+                    // Actualizar contador de favoritos
+                    const card = this.closest('.pub-card');
+                    const favCount = card.querySelector('.fav-count');
+                    
+                    if (data.accion === 'agregado') {
+                        // Incrementar contador
+                        if (favCount) {
+                            const currentCount = parseInt(favCount.textContent.match(/\d+/)[0] || 0);
+                            favCount.innerHTML = `<i class="fas fa-heart"></i> ${currentCount + 1}`;
+                        } else {
+                            // Crear contador si no existe
+                            const newCount = document.createElement('span');
+                            newCount.className = 'fav-count';
+                            newCount.innerHTML = `<i class="fas fa-heart"></i> 1`;
+                            card.prepend(newCount);
+                        }
+                    } else if (data.accion === 'eliminado') {
+                        // Decrementar contador
+                        if (favCount) {
+                            const currentCount = parseInt(favCount.textContent.match(/\d+/)[0] || 0);
+                            if (currentCount - 1 <= 0) {
+                                favCount.remove();
+                            } else {
+                                favCount.innerHTML = `<i class="fas fa-heart"></i> ${currentCount - 1}`;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                // Revertir visualmente si hay error
+                this.classList.toggle('active');
+                icon.classList.toggle('fa-regular');
+                icon.classList.toggle('fa-solid');
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    this.classList.remove('animating');
+                }, 800);
+            });
+        });
+    });
+}
+
+// Función para agregar eventos a los enlaces de las publicaciones
+function agregarEventosEnlaces() {
+    document.querySelectorAll('.publicacion-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Solo navegar si no se hizo click en el botón de favorito
+            if (!e.target.closest('.fav-btn')) {
+                window.location.href = this.href;
+            }
+        });
+    });
 }
 
 // Cambios en los filtros
@@ -216,26 +342,24 @@ reiniciarBtn.addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', cargarPublicaciones);
 </script>
 
-
 <!--HABILITA VENTANAS FLOTANTES DE LOGIN Y REGISTRO-->
-    <script src="script/login.js"></script>
-    <script src="script/infopub.js"></script>
+<script src="script/login.js"></script>
 
-    <!--HABILITA VENTANA FLOTANTE DE MENSAJE DE USUARIO CREADO-->
-    <script>
-        window.addEventListener("DOMContentLoaded", function() {
-            const mensajeExito = document.getElementById("mensajeExito");
+<!--HABILITA VENTANA FLOTANTE DE MENSAJE DE USUARIO CREADO-->
+<script>
+    window.addEventListener("DOMContentLoaded", function() {
+        const mensajeExito = document.getElementById("mensajeExito");
 
-            <?php if (isset($_GET['registro']) && $_GET['registro'] === "ok"): ?>
-                mensajeExito.style.display = "flex";
+        <?php if (isset($_GET['registro']) && $_GET['registro'] === "ok"): ?>
+            mensajeExito.style.display = "flex";
 
-                // Ocultar después de 3 segundos
-                setTimeout(() => {
-                    mensajeExito.style.display = "none";
-                }, 3000);
-            <?php endif; ?>
-        });
-    </script>
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                mensajeExito.style.display = "none";
+            }, 3000);
+        <?php endif; ?>
+    });
+</script>
 
 </body>
 </html>

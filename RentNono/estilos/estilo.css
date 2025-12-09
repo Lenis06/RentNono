@@ -102,7 +102,308 @@
 .pub-card {
     position: relative;
 }
+/* =========================================== */
+/* COMPLEMENTOS PARA FAVORITOS (compatible con fav-btn existente) */
+/* =========================================== */
 
+/* Mejoramos el fav-btn existente */
+.fav-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+    transition: all 0.3s ease;
+    border: 2px solid #ddd;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.fav-btn:hover {
+    transform: scale(1.15);
+    border-color: #ff4757;
+    background: rgba(255,255,255,1);
+}
+
+.fav-btn.active {
+    background: #ff4757;
+    border-color: #ff4757;
+}
+
+.fav-btn i {
+    transition: all 0.3s ease;
+}
+
+.fav-btn.active i {
+    color: white;
+    font-weight: bold;
+}
+
+/* Clase alternativa btn-fav (para compatibilidad) */
+.btn-fav {
+    /* Hereda todos los estilos de fav-btn */
+    composes: fav-btn;
+
+}
+
+/* Hacemos que la card sea clickeable */
+.pub-card, .feature-item {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.pub-card:hover, .feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+    /* Contador de favoritos */
+    .fav-count {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 71, 87, 0.9);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 9;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+/* =========================================== */
+/* ESTILOS UNIFICADOS PARA CORAZONES FAV-BTN */
+/* =========================================== */
+
+/* Reset para asegurar consistencia */
+.fav-btn, .btn-fav {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+    transition: all 0.3s ease;
+    border: 2px solid #ddd;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    /* Reseteamos cualquier estilo amarillo */
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Hover consistente */
+.fav-btn:hover, .btn-fav:hover {
+    transform: scale(1.15);
+    border-color: #ff4757;
+    background: rgba(255, 255, 255, 1) !important;
+}
+
+/* Estado activo consistente */
+.fav-btn.active, .btn-fav.active {
+    background: #ff4757 !important;
+    border-color: #ff4757 !important;
+}
+
+/* Iconos dentro de los botones */
+.fav-btn i, .btn-fav i {
+    transition: all 0.3s ease;
+    color: #666;
+}
+
+/* Icono cuando está activo */
+.fav-btn.active i, .btn-fav.active i {
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Hover del icono */
+.fav-btn:hover i, .btn-fav:hover i {
+    color: #ff4757;
+}
+
+/* Animación para ambos */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
+}
+
+.fav-btn.animating, .btn-fav.animating {
+    animation: heartBeat 0.8s ease;
+}
+
+/* Contador de favoritos */
+.fav-count {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 71, 87, 0.9);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fav-count i {
+    font-size: 10px;
+    color: white !important;
+}
+
+/* Para las publicaciones */
+.pub-card {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.pub-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.publicacion-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+    padding: 15px;
+}
+
+.publicacion-link:hover {
+    color: inherit;
+}
+
+.fav-count i {
+    font-size: 10px;
+}
+
+/* Para hacer enlaces clickeables */
+.publicacion-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+}
+
+.publicacion-link:hover {
+    color: inherit;
+}
+
+/* Sección Mis Favoritos */
+.favoritos-section {
+    padding: 40px 0;
+    min-height: 60vh;
+}
+
+.favoritos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.favorito-vacio {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    color: #666;
+    max-width: 600px;
+    margin: 40px auto;
+}
+
+.favorito-vacio i {
+    font-size: 60px;
+    margin-bottom: 20px;
+    color: #ddd;
+}
+
+.favorito-vacio h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.favorito-vacio p {
+    margin-bottom: 25px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* Animaciones */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
+}
+
+.fav-btn.animating, .btn-fav.animating {
+    animation: heartBeat 0.8s ease;
+}
+
+/* Cuando no hay resultados */
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 18px;
+    grid-column: 1 / -1;
+}
+
+.no-results i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ddd;
+    display: block;
+}
+
+/* Ajustes responsive */
+@media (max-width: 768px) {
+    .fav-btn, .btn-fav {
+        width: 36px;
+        height: 36px;
+        padding: 8px;
+        font-size: 18px;
+    }
+    
+    .fav-count {
+        top: 8px;
+        left: 8px;
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+}
 /*----------------------------------*/
 
 

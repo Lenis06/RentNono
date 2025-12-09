@@ -27,19 +27,13 @@ include("../database/publicaciones.php");
         <nav class="main-nav">
             <ul>
                 <li><a href="ixusuario.php">Inicio</a></li>
-                <li><b class="btn-primary-small" href="erusuario.php">Explorar</b></li>
-                <li><a href="nsusuarios.php">Nosotros</a></li>
+                <li><b class="btn-primary-small" href="erusuario.php">Explorar Propiedades</b></li>
+                <li><a href="mis_favoritos.php">Mis Favoritos</a></li>
                 <li><a href="../database/logout.php">Cerrar sesión</a></li>
             </ul>
         </nav>
     </div>
 </header>
-<!-- 🔍 BUSCADOR -->
-<section class="buscador container">
-  <input type="text" id="searchInput" placeholder="Buscar por título o descripción...">
-</section>
-
-<!-- 🏡 FILTROS -->
 <section class="filtros container">
   <h3 class="titulo-filtros">Filtrar propiedades</h3>
   <form id="filtrosForm" class="filtros-form">
@@ -59,10 +53,7 @@ include("../database/publicaciones.php");
           <option value="">Todos</option>
           <option value="casa">Casa</option>
           <option value="departamento">Departamento</option>
-          <option value="local comercial">Local Comercial</option>
           <option value="terreno o lote">Terreno o Lote</option>
-          <option value="galpon">Galpón</option>
-          <option value="camping">Camping</option>
         </select>
       </div>
 
@@ -143,11 +134,15 @@ include("../database/publicaciones.php");
   </form>
 </section>
 
+
 <!-- 🏠 PUBLICACIONES FILTRADAS -->
 <section class="features-section container">
   <div class="features-grid" id="featuresGrid">
     <!-- Se llenará dinámicamente con fetch -->
   </div>
+  <p id="noResultsMessage" style="display:none;text-align:center;padding:20px;">
+    No existen publicaciones que coincidan con tu búsqueda
+  </p>
 </section>
 
 <footer class="main-footer">
@@ -162,27 +157,37 @@ include("../database/publicaciones.php");
 
 <!-- ⚙️ Script de filtros, búsqueda y reinicio -->
 <script>
+// Variables globales para el estado de sesión
+const estaLogueado = true; // Usuario siempre está logueado en erusuario.php
+const esVisitante = <?php echo (isset($_SESSION['rol']) && $_SESSION['rol'] === 'visitante') ? 'true' : 'false'; ?>;
+
 const filtros = ['operacion','tipo','estado','garaje','precio_max','ambientes','dormitorios','sanitarios'];
 const featuresGrid = document.getElementById('featuresGrid');
 const reiniciarBtn = document.getElementById('reiniciarFiltros');
 const noResultsMessage = document.getElementById('noResultsMessage');
-const searchInput = document.getElementById('searchInput');
 
-// 🎯 Cargar publicaciones filtradas y búsqueda
+// 🎯 Cargar publicaciones filtradas
 function cargarPublicaciones() {
     let params = filtros.map(f => {
         const val = document.getElementById(f).value;
         return val ? `${f}=${encodeURIComponent(val)}` : '';
     }).filter(p => p !== '').join('&');
 
-    const searchVal = searchInput.value.trim();
-    if(searchVal) params += (params ? '&' : '') + `busqueda=${encodeURIComponent(searchVal)}`;
-
-    fetch('../database/publicaciones.php?ajax=1&' + params)
+    // AGREGAR ESTO: Enviar cookie de sesión con la petición
+    fetch('../database/publicaciones.php?ajax=1&' + params, {
+        credentials: 'include' // 🔥 Esto envía las cookies (incluyendo la de sesión)
+    })
         .then(res => res.text())
         .then(html => {
             featuresGrid.innerHTML = html;
-
+            
+            // Agregar eventos a los botones de favorito después de cargar
+            agregarEventosFavoritos();
+            
+            // Agregar eventos a los enlaces de las publicaciones
+            agregarEventosEnlaces();
+            
+            // Efecto visual
             featuresGrid.style.opacity = 0;
             setTimeout(() => {
                 featuresGrid.style.opacity = 1;
@@ -198,22 +203,127 @@ function cargarPublicaciones() {
         .catch(err => console.error('Error al cargar publicaciones:', err));
 }
 
+// Función para agregar eventos a los botones de favorito
+function agregarEventosFavoritos() {
+    document.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const idPublicacion = this.dataset.id;
+            
+            if (!estaLogueado || !esVisitante) {
+                // En erusuario.php, el usuario siempre está logueado
+                // pero solo visitantes pueden agregar favoritos
+                if (!esVisitante) {
+                    alert('Solo los usuarios visitantes pueden agregar favoritos.');
+                }
+                return;
+            }
+            
+            // Determinar la acción basada en el estado ACTUAL
+            const esFavoritoActual = this.classList.contains('active');
+            
+            // Toggle visual del botón
+            this.classList.toggle('active');
+            this.classList.add('animating');
+            
+            // Cambiar icono correctamente
+            const icon = this.querySelector('i');
+            if (this.classList.contains('active')) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+            } else {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+            }
+            
+            // Determinar acción para el servidor
+            const accion = esFavoritoActual ? 'eliminar' : 'agregar';
+            
+            // Enviar petición al servidor
+            fetch('../database/favoritos.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `accion=toggle&id_publicacion=${idPublicacion}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    // Revertir visualmente si hay error
+                    this.classList.toggle('active');
+                    icon.classList.toggle('fa-regular');
+                    icon.classList.toggle('fa-solid');
+                } else {
+                    // Actualizar contador de favoritos
+                    const card = this.closest('.pub-card');
+                    const favCount = card.querySelector('.fav-count');
+                    
+                    if (data.accion === 'agregado') {
+                        // Incrementar contador
+                        if (favCount) {
+                            const currentCount = parseInt(favCount.textContent.match(/\d+/)[0] || 0);
+                            favCount.innerHTML = `<i class="fas fa-heart"></i> ${currentCount + 1}`;
+                        } else {
+                            // Crear contador si no existe
+                            const newCount = document.createElement('span');
+                            newCount.className = 'fav-count';
+                            newCount.innerHTML = `<i class="fas fa-heart"></i> 1`;
+                            card.prepend(newCount);
+                        }
+                    } else if (data.accion === 'eliminado') {
+                        // Decrementar contador
+                        if (favCount) {
+                            const currentCount = parseInt(favCount.textContent.match(/\d+/)[0] || 0);
+                            if (currentCount - 1 <= 0) {
+                                favCount.remove();
+                            } else {
+                                favCount.innerHTML = `<i class="fas fa-heart"></i> ${currentCount - 1}`;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                // Revertir visualmente si hay error
+                this.classList.toggle('active');
+                icon.classList.toggle('fa-regular');
+                icon.classList.toggle('fa-solid');
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    this.classList.remove('animating');
+                }, 800);
+            });
+        });
+    });
+}
+
+// Función para agregar eventos a los enlaces de las publicaciones
+function agregarEventosEnlaces() {
+    document.querySelectorAll('.publicacion-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Solo navegar si no se hizo click en el botón de favorito
+            if (!e.target.closest('.fav-btn')) {
+                window.location.href = this.href;
+            }
+        });
+    });
+}
+
 // Cambios en los filtros
 filtros.forEach(f => {
     const el = document.getElementById(f);
     if(el) el.addEventListener('change', cargarPublicaciones);
 });
 
-// Buscador en tiempo real
-searchInput.addEventListener('input', () => {
-    clearTimeout(searchInput._timer);
-    searchInput._timer = setTimeout(cargarPublicaciones, 300);
-});
-
 // Botón reiniciar
 reiniciarBtn.addEventListener('click', () => {
     filtros.forEach(f => document.getElementById(f).value = '');
-    searchInput.value = '';
     cargarPublicaciones();
 });
 

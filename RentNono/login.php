@@ -3,6 +3,13 @@
     include("database/inicio_sesion.php");
 
     $error = isset($_GET['error']) ? $_GET['error'] : "";
+    $error_mensaje = "";
+    
+    if ($error == "1") {
+        $error_mensaje = "Correo o contraseña incorrectos";
+    } elseif ($error == "inactivo") {
+        $error_mensaje = "Usuario inhabilitado. Contacte al administrador";
+    }
     
 ?>
 
@@ -15,9 +22,9 @@
         <span id="cerrarLogin" class="cerrar">&times;</span>
         <h2>BIENVENIDO</h2>
 
-        <?php if (isset($_GET['error'])): ?>
+        <?php if ($error_mensaje): ?>
             <div class="error-login">
-                Correo o contraseña incorrectos
+                <?= $error_mensaje ?>
             </div>
             <script>
                 window.addEventListener("DOMContentLoaded", function() {
@@ -237,8 +244,8 @@ document.getElementById("usuarioLogin").addEventListener("blur", function() {
 // ABRIR MODAL DESDE EL CORAZÓN
 document.addEventListener("click", function (e) {
 
-    // Si el elemento clickeado tiene la clase btn-fav
-    if (e.target.classList.contains("btn-fav")) {
+    // Si el elemento clickeado tiene la clase favbtn
+    if (e.target.classList.contains("fav-btn")) {-----
         const modal = document.getElementById("modalLogin");
         modal.style.display = "flex";  // Mostrar ventana emergente
     }
