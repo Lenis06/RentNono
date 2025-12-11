@@ -1,0 +1,16 @@
+-- Agregar campos para Google a usuario_visitante
+ALTER TABLE usuario_visitante 
+ADD COLUMN google_id VARCHAR(100) DEFAULT NULL,
+ADD COLUMN foto VARCHAR(255) DEFAULT NULL,
+ADD COLUMN telefono VARCHAR(20) DEFAULT NULL,
+MODIFY COLUMN password VARCHAR(255) DEFAULT NULL;
+
+-- Agregar campos para Google a usuario_propietario
+ALTER TABLE usuario_propietario 
+ADD COLUMN google_id VARCHAR(100) DEFAULT NULL,
+ADD COLUMN foto VARCHAR(255) DEFAULT NULL,
+MODIFY COLUMN password VARCHAR(255) DEFAULT NULL;
+
+-- Crear índices para búsqueda rápida
+CREATE INDEX idx_google_id_visitante ON usuario_visitante(google_id);
+CREATE INDEX idx_google_id_propietario ON usuario_propietario(google_id);
