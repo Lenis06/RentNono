@@ -462,15 +462,15 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3);
+            box-shadow: 0 2px 5px rgba(130, 177, 109, 0.3);
             width: auto;
             margin: 10px 0;
         }
         
         .btn-login-resena:hover {
-            background: #1976D2;
+            background: #6d9c5a; /* Verde más oscuro */
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.4);
+            box-shadow: 0 4px 10px rgba(130, 177, 109, 0.4);
         }
         
         .btn-login-resena i {
