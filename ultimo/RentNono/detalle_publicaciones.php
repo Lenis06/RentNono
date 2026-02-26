@@ -26,16 +26,36 @@ $stmtImagenes = $conn->prepare("SELECT imagen FROM propiedades_imagenes WHERE pr
 $stmtImagenes->execute([$id]);
 $imagenes = $stmtImagenes->fetchAll(PDO::FETCH_COLUMN);
 
+// Si hay imagen principal en la tabla propiedades y no hay imágenes en propiedades_imagenes
+if (empty($imagenes) && !empty($pub['imagen'])) {
+    $imagenes = ["media/publicaciones/" . $pub['imagen']];
+}
+
+// Si no hay imágenes, crear imágenes por defecto (grises)
 if (empty($imagenes)) {
     $imagenes = [];
-    for ($i = 0; $i < 3; $i++) {
+    for ($i = 0; $i < 5; $i++) {
         $imagenes[] = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' fill='%23999' text-anchor='middle' dy='.3em'%3EImagen no disponible%3C/text%3E%3C/svg%3E";
     }
 }
 
+// Lista de avatares aleatorios para usuarios sin foto
+$avatares = [
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=9',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=10',
+];
+
 $resenas = [];
 
-// Primero obtenemos las reseñas
+// Obtener las reseñas
 $stmtRes = $conn->prepare("
     SELECT * FROM opiniones 
     WHERE propiedad_id = :id
@@ -45,43 +65,38 @@ $stmtRes->bindParam(':id', $id);
 $stmtRes->execute();
 $opiniones = $stmtRes->fetchAll(PDO::FETCH_ASSOC);
 
-// Para cada reseña, buscamos el nombre y foto en la tabla correspondiente
+// Para cada reseña, buscar nombre y foto del usuario
 foreach ($opiniones as $opinion) {
     $usuario_id = $opinion['usuario_id'];
     $nombre_usuario = "Usuario";
-    $foto_usuario = "media/default-avatar.png";
+    $foto_usuario = $avatares[array_rand($avatares)]; // Avatar aleatorio por defecto
     
     // Buscar en usuario_visitante
     $stmt = $conn->prepare("SELECT nombre, foto FROM usuario_visitante WHERE id = ?");
     $stmt->execute([$usuario_id]);
     if ($row = $stmt->fetch()) {
         $nombre_usuario = $row['nombre'];
-        $foto_usuario = !empty($row['foto']) ? $row['foto'] : "media/default-avatar.png";
+        if (!empty($row['foto'])) {
+            $foto_usuario = $row['foto']; // Si tiene foto, usar esa
+        }
     } else {
         // Buscar en usuario_propietario
         $stmt = $conn->prepare("SELECT nombre, foto FROM usuario_propietario WHERE id = ?");
         $stmt->execute([$usuario_id]);
         if ($row = $stmt->fetch()) {
             $nombre_usuario = $row['nombre'];
-            $foto_usuario = !empty($row['foto']) ? $row['foto'] : "media/default-avatar.png";
-        } else {
-            // Buscar en usuario_admin
-            $stmt = $conn->prepare("SELECT nombre, foto FROM usuario_admin WHERE id = ?");
-            $stmt->execute([$usuario_id]);
-            if ($row = $stmt->fetch()) {
-                $nombre_usuario = $row['nombre'];
-                $foto_usuario = !empty($row['foto']) ? $row['foto'] : "media/default-avatar.png";
+            if (!empty($row['foto'])) {
+                $foto_usuario = $row['foto']; // Si tiene foto, usar esa
             }
         }
     }
     
-    // Agregar el nombre y foto a la reseña
     $opinion['usuario_nombre'] = $nombre_usuario;
     $opinion['usuario_foto'] = $foto_usuario;
     $resenas[] = $opinion;
 }
 
-// Obtener información del propietario - CORREGIDO: p.usuario_id -> p.id_usuario
+// Obtener información del propietario
 $stmtProp = $conn->prepare("SELECT up.* FROM usuario_propietario up 
                             INNER JOIN propiedades p ON p.id_usuario = up.id 
                             WHERE p.id = ?");
@@ -95,7 +110,7 @@ if (count($resenas) > 0) {
     $promedio = round($suma / count($resenas), 1);
 }
 
-// Verificar si el usuario ya opinó (solo si está logueado)
+// Verificar si el usuario ya opinó
 $yaOpino = false;
 if (isset($_SESSION['id'])) {
     $checkOpinion = $conn->prepare("SELECT id FROM opiniones WHERE propiedad_id = ? AND usuario_id = ?");
@@ -131,11 +146,11 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             padding: 0 24px;
         }
 
-        /* HEADER ORIGINAL RESTAURADO */
-        .header {
+        /* HEADER SIMPLE */
+        .simple-header {
             background-color: #ffffff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 15px 0;
+            padding: 12px 0;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -148,47 +163,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             align-items: center;
         }
 
-        .logo h1 {
-            font-size: 24px;
-            color: #4CAF50;
-            margin: 0;
-        }
-
-        .logo h1 a {
-            text-decoration: none;
-            color: #4CAF50;
-        }
-
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-menu li a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .nav-menu li a:hover {
-            color: #4CAF50;
-        }
-
-        .btn-iniciar-sesion {
-            background-color: #4CAF50;
-            color: white !important;
-            padding: 8px 20px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-
-        .btn-iniciar-sesion:hover {
-            background-color: #45a049;
-        }
-
-        .btn-volver {
+        .btn-volver-simple {
             background: none;
             border: none;
             color: #4CAF50;
@@ -196,19 +171,66 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             cursor: pointer;
             display: flex;
             align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-volver-simple:hover {
+            background-color: #f0f8f0;
+        }
+
+        .simple-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-name {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .btn-cerrar-sesion {
+            color: #ff4444;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
             gap: 5px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
 
-        .btn-volver:hover {
-            color: #45a049;
+        .btn-cerrar-sesion:hover {
+            background-color: #fff0f0;
         }
 
-        /* Galería de imágenes */
+        .btn-iniciar-sesion-simple {
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            font-size: 16px;
+        }
+
+        .btn-iniciar-sesion-simple:hover {
+            background-color: #45a049;
+        }
+
+        /* GALERÍA - 1 GRANDE + 4 PEQUEÑAS */
         .gallery-container {
             margin-bottom: 32px;
         }
-        
-        /* Galería de imágenes - 1 grande + 4 pequeñas */
+
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -268,7 +290,8 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
         .view-more:hover {
             background: #f7f7f7;
         }
-        /* Contenido principal */
+
+        /* CONTENIDO PRINCIPAL */
         .main-content {
             display: grid;
             grid-template-columns: 1fr 360px;
@@ -300,12 +323,12 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
         }
 
         .rating-badge i {
-            color: #4CAF50;
+            color: #FFD700; /* CAMBIADO A AMARILLO */
         }
 
-        /* SECCIÓN ANFITRIÓN - CORREGIDA */
+        /* SECCIÓN DEL ANFITRIÓN - ESTILO AIRBNB */
         .host-section {
-            padding: 24px 0;
+            padding: 32px 0;
             border-top: 1px solid #ebebeb;
             border-bottom: 1px solid #ebebeb;
             margin-bottom: 24px;
@@ -314,86 +337,156 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
         .host-section h2 {
             font-size: 22px;
             font-weight: 600;
+            margin-bottom: 24px;
+            color: #222;
+        }
+
+        .host-stats {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            text-align: left;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #222;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #717171;
+        }
+
+        .host-profile {
+            display: flex;
+            align-items: center;
+            gap: 16px;
             margin-bottom: 20px;
+        }
+
+        .host-avatar-large {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .host-name-title h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .superhost-badge-large {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background-color: #f7f7f7;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #222;
+        }
+
+        .superhost-badge-large i {
             color: #4CAF50;
         }
 
-        .host-card {
+        .host-description {
+            margin-bottom: 20px;
+            line-height: 1.5;
+            color: #222;
+            font-size: 15px;
+        }
+
+        .host-response {
+            margin-bottom: 20px;
+        }
+
+        .response-item {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
 
-        .host-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #4CAF50;
+        .response-item i {
+            font-size: 20px;
+            color: #4CAF50;
+            width: 24px;
         }
 
-        .host-details h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .host-details p {
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .host-badge {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+        .response-item strong {
+            font-size: 15px;
             font-weight: 600;
         }
 
-        .host-badge i {
-            margin-right: 5px;
+        .response-item span {
+            font-size: 14px;
+            color: #717171;
         }
 
-        .host-contact {
-            margin-top: 15px;
+        .host-bio {
+            margin-bottom: 20px;
+            padding: 12px 0;
+            border-top: 1px solid #ebebeb;
+            border-bottom: 1px solid #ebebeb;
+        }
+
+        .host-bio p {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 12px;
+            color: #222;
+        }
+
+        .host-bio i {
+            color: #4CAF50;
+            width: 24px;
         }
 
         .btn-contactar {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 14px 24px;
+            border-radius: 8px;
             font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
             transition: background-color 0.3s;
+            margin-bottom: 16px;
         }
 
         .btn-contactar:hover {
             background-color: #45a049;
         }
 
-        .btn-ver-perfil {
-            background-color: transparent;
-            border: 1px solid #4CAF50;
+        .payment-warning {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background-color: #f7f7f7;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #717171;
+            line-height: 1.4;
+        }
+
+        .payment-warning i {
+            font-size: 20px;
             color: #4CAF50;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
         }
 
-        .btn-ver-perfil:hover {
-            background-color: #f0f8f0;
-        }
-
-        /* Servicios destacados */
+        /* SERVICIOS DESTACADOS */
         .amenities {
             padding: 24px 0;
             border-bottom: 1px solid #ebebeb;
@@ -448,8 +541,8 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             color: #222;
         }
 
-        /* Tarjeta de reserva */
-        .booking-card {
+        /* TARJETA DEL PROPIETARIO */
+        .owner-card {
             background: white;
             border: 1px solid #ebebeb;
             border-radius: 12px;
@@ -459,44 +552,181 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             top: 24px;
         }
 
-        .booking-price {
-            font-size: 22px;
+        .owner-card-header {
+            margin-bottom: 20px;
+        }
+
+        .owner-card-header h3 {
+            font-size: 18px;
             font-weight: 600;
+            color: #222;
+        }
+
+        .owner-card-profile {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ebebeb;
+        }
+
+        .owner-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .owner-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .owner-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #4CAF50;
+        }
+
+        .owner-badge i {
+            font-size: 14px;
+        }
+
+        .owner-contact-info {
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-item i {
+            width: 24px;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+
+        .contact-item strong {
+            display: block;
+            font-size: 14px;
+            color: #222;
+            margin-bottom: 2px;
+        }
+
+        .contact-item span {
+            font-size: 14px;
+            color: #717171;
+        }
+
+        .owner-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .btn-llamar, .btn-email {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-llamar {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-llamar:hover {
+            background-color: #45a049;
+        }
+
+        .btn-email {
+            background-color: #f0f8f0;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .btn-email:hover {
+            background-color: #e0f0e0;
+        }
+
+        .btn-llamar.disabled, .btn-email.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background-color: #ccc;
+            border-color: #ccc;
+            color: #666;
+        }
+
+        .owner-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background-color: #f7f7f7;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #717171;
+        }
+
+        .owner-note i {
+            color: #4CAF50;
+        }
+
+        /* MAPA */
+        .map-section {
+            padding: 48px 0;
+            border-top: 1px solid #ebebeb;
+        }
+
+        .map-section h3 {
+            font-size: 22px;
             margin-bottom: 24px;
             color: #4CAF50;
         }
 
-        .booking-price span {
-            font-size: 16px;
-            font-weight: normal;
-            color: #717171;
-        }
-
-        .booking-btn {
+        .map-section iframe {
             width: 100%;
-            background: #4CAF50;
-            color: white;
+            height: 400px;
+            border-radius: 12px;
             border: none;
-            padding: 14px;
+        }
+
+        .map-address {
+            margin-top: 16px;
+            padding: 12px;
+            background-color: #f7f7f7;
             border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #222;
         }
 
-        .booking-btn:hover {
-            background: #45a049;
+        .map-address i {
+            color: #4CAF50;
         }
 
-        .booking-note {
-            text-align: center;
-            color: #717171;
-            font-size: 14px;
-        }
-
-        /* Sección de reseñas */
+        /* SECCIÓN DE RESEÑAS */
         .reviews-section {
             padding: 48px 0;
             border-top: 1px solid #ebebeb;
@@ -557,7 +787,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
         }
 
         .review-rating {
-            color: #4CAF50;
+            color: #FFD700; /* CAMBIADO A AMARILLO */
             margin-bottom: 12px;
         }
 
@@ -567,7 +797,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             font-size: 15px;
         }
 
-        /* Formulario de reseña */
+        /* FORMULARIO DE RESEÑA */
         .review-form-section {
             margin-bottom: 48px;
             background: #f9f9f9;
@@ -582,62 +812,31 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             color: #4CAF50;
         }
 
-/* Sistema de estrellas mejorado */
-.rating {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-    gap: 4px;
-    margin-bottom: 16px;
-}
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
 
-.rating input {
-    display: none;
-}
+        .rating input {
+            display: none;
+        }
 
-.rating label {
-    font-size: 32px;
-    color: #ddd;
-    cursor: pointer;
-    transition: color 0.2s;
-    position: relative;
-}
+        .rating label {
+            font-size: 32px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
 
-.rating label.half-star {
-    position: relative;
-}
+        .rating label:hover,
+        .rating label:hover ~ label,
+        .rating input:checked ~ label {
+            color: #FFD700; /* CAMBIADO A AMARILLO */
+        }
 
-.rating label.half-star:after {
-    content: '★';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 50%;
-    overflow: hidden;
-    color: #4CAF50;
-    opacity: 0;
-}
-
-.rating label:hover,
-.rating label:hover ~ label,
-.rating input:checked ~ label {
-    color: #4CAF50;
-}
-
-/* Para medias estrellas (se necesitará JavaScript) */
-.rating.half-enabled label {
-    position: relative;
-}
-
-.rating.half-enabled label.half-selected:before {
-    content: '★';
-    position: absolute;
-    left: 0;
-    width: 50%;
-    overflow: hidden;
-    color: #4CAF50;
-    z-index: 1;
-}
         .review-form-section textarea {
             width: 100%;
             padding: 16px;
@@ -697,26 +896,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             border: 1px solid #4CAF50;
         }
 
-        /* Mapa */
-        .map-section {
-            padding: 48px 0;
-            border-top: 1px solid #ebebeb;
-        }
-
-        .map-section h3 {
-            font-size: 22px;
-            margin-bottom: 24px;
-            color: #4CAF50;
-        }
-
-        .map-section iframe {
-            width: 100%;
-            height: 400px;
-            border-radius: 12px;
-            border: none;
-        }
-
-        /* MODAL para todos los servicios */
+        /* MODAL DE SERVICIOS */
         .modal {
             display: none;
             position: fixed;
@@ -795,7 +975,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             color: #999;
         }
 
-        /* Mensajes flotantes */
+        /* MENSAJES FLOTANTES */
         .mensaje-flotante {
             position: fixed;
             top: 24px;
@@ -826,7 +1006,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             }
         }
 
-        /* Responsive */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -837,6 +1017,16 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                 height: auto;
             }
             
+            .gallery-item.main-image {
+                grid-column: span 1;
+                grid-row: span 1;
+                height: 300px;
+            }
+            
+            .gallery-item.small-image {
+                height: 200px;
+            }
+            
             .reviews-grid {
                 grid-template-columns: 1fr;
             }
@@ -844,431 +1034,11 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
             .amenities-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .host-stats {
+                gap: 20px;
+            }
         }
-
-
-
-
-
-        /* Sección del anfitrión estilo Airbnb */
-.host-section {
-    padding: 32px 0;
-    border-top: 1px solid #ebebeb;
-    border-bottom: 1px solid #ebebeb;
-    margin-bottom: 24px;
-}
-
-.host-section h2 {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    color: #222;
-}
-
-.host-stats {
-    display: flex;
-    gap: 40px;
-    margin-bottom: 24px;
-}
-
-.stat-item {
-    text-align: left;
-}
-
-.stat-number {
-    font-size: 24px;
-    font-weight: 600;
-    color: #222;
-    display: block;
-}
-
-.stat-label {
-    font-size: 14px;
-    color: #717171;
-}
-
-.host-profile {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.host-avatar-large {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.host-name-title h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.superhost-badge-large {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background-color: #f7f7f7;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #222;
-}
-
-.superhost-badge-large i {
-    color: #4CAF50;
-}
-
-.host-description {
-    margin-bottom: 20px;
-    line-height: 1.5;
-    color: #222;
-    font-size: 15px;
-}
-
-.host-response {
-    margin-bottom: 20px;
-}
-
-.response-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.response-item i {
-    font-size: 20px;
-    color: #4CAF50;
-    width: 24px;
-}
-
-.response-item strong {
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.response-item span {
-    font-size: 14px;
-    color: #717171;
-}
-
-.host-bio {
-    margin-bottom: 20px;
-    padding: 12px 0;
-    border-top: 1px solid #ebebeb;
-    border-bottom: 1px solid #ebebeb;
-}
-
-.host-bio p {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #222;
-}
-
-.host-bio i {
-    color: #4CAF50;
-    width: 24px;
-}
-
-.btn-contactar {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 14px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    width: 100%;
-    transition: background-color 0.3s;
-    margin-bottom: 16px;
-}
-
-.btn-contactar:hover {
-    background-color: #45a049;
-}
-
-.payment-warning {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background-color: #f7f7f7;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #717171;
-    line-height: 1.4;
-}
-
-.payment-warning i {
-    font-size: 20px;
-    color: #4CAF50;
-}
-
-
-
-
-
-
-
-
-/* Tarjeta de información del propietario */
-.owner-card {
-    background: white;
-    border: 1px solid #ebebeb;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-    position: sticky;
-    top: 24px;
-}
-
-.owner-card-header {
-    margin-bottom: 20px;
-}
-
-.owner-card-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #222;
-}
-
-.owner-card-profile {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ebebeb;
-}
-
-.owner-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.owner-info h4 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.owner-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    color: #4CAF50;
-}
-
-.owner-badge i {
-    font-size: 14px;
-}
-
-.owner-contact-info {
-    margin-bottom: 20px;
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.contact-item:last-child {
-    border-bottom: none;
-}
-
-.contact-item i {
-    width: 24px;
-    font-size: 18px;
-    color: #4CAF50;
-}
-
-.contact-item strong {
-    display: block;
-    font-size: 14px;
-    color: #222;
-    margin-bottom: 2px;
-}
-
-.contact-item span {
-    font-size: 14px;
-    color: #717171;
-}
-
-.owner-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.btn-llamar, .btn-email {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.btn-llamar {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.btn-llamar:hover {
-    background-color: #45a049;
-}
-
-.btn-email {
-    background-color: #f0f8f0;
-    color: #4CAF50;
-    border: 1px solid #4CAF50;
-}
-
-.btn-email:hover {
-    background-color: #e0f0e0;
-}
-
-.btn-llamar.disabled, .btn-email.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-    background-color: #ccc;
-    border-color: #ccc;
-    color: #666;
-}
-
-.owner-note {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background-color: #f7f7f7;
-    border-radius: 8px;
-    font-size: 12px;
-    color: #717171;
-}
-
-.owner-note i {
-    color: #4CAF50;
-}
-
-
-
-
-
-
-
-
-
-
-
-.map-address {
-    margin-top: 16px;
-    padding: 12px;
-    background-color: #f7f7f7;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #222;
-}
-
-.map-address i {
-    color: #4CAF50;
-}
-
-
-
-
-
-
-/* Header simple */
-.simple-header {
-    background-color: #ffffff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    padding: 12px 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    margin-bottom: 20px;
-}
-
-.btn-volver-simple {
-    background: none;
-    border: none;
-    color: #4CAF50;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.btn-volver-simple:hover {
-    background-color: #f0f8f0;
-}
-
-.simple-nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.user-name {
-    color: #333;
-    font-weight: 500;
-}
-
-.btn-cerrar-sesion {
-    color: #ff4444;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 12px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.btn-cerrar-sesion:hover {
-    background-color: #fff0f0;
-}
-
-.btn-iniciar-sesion-simple {
-    background-color: #4CAF50;
-    color: white;
-    text-decoration: none;
-    padding: 8px 20px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.btn-iniciar-sesion-simple:hover {
-    background-color: #45a049;
-}
     </style>
 </head>
 <body>
@@ -1295,78 +1065,75 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
         </script>
     <?php endif; ?>
 
-    <!-- HEADER ORIGINAL RESTAURADO -->
-        <!-- Header simple -->
-        <header class="simple-header">
-            <div class="container header-content">
-                <button onclick="history.back()" class="btn-volver-simple">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </button>
-                
-                <nav class="simple-nav">
-                    <?php if(isset($_SESSION['nombre'])): ?>
-                        <span class="user-name"><?= htmlspecialchars($_SESSION['nombre']) ?></span>
-                        <a href="database/logout.php" class="btn-cerrar-sesion">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-                        </a>
-                    <?php else: ?>
-                        <a id="abrirLogin" class="btn-iniciar-sesion-simple">
-                            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
-                        </a>
-                    <?php endif; ?>
-                </nav>
-            </div>
-        </header>
+    <!-- HEADER SIMPLE -->
+    <header class="simple-header">
+        <div class="container header-content">
+            <button onclick="history.back()" class="btn-volver-simple">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            
+            <nav class="simple-nav">
+                <?php if(isset($_SESSION['nombre'])): ?>
+                    <span class="user-name"><i class="fas fa-user"></i> <?= htmlspecialchars($_SESSION['nombre']) ?></span>
+                    <a href="database/logout.php" class="btn-cerrar-sesion">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </a>
+                <?php else: ?>
+                    <button id="abrirLogin" class="btn-iniciar-sesion-simple">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+                    </button>
+                <?php endif; ?>
+            </nav>
+        </div>
+    </header>
 
     <main class="container">
-
-<!-- Galería de imágenes - 1 grande + 4 pequeñas -->
-    <div class="gallery-container">
-        <div class="gallery-grid">
-            <?php 
-            // Asegurar que tenemos al menos 5 imágenes
-            $imagenes_galeria = $imagenes;
-            while (count($imagenes_galeria) < 5) {
-                $imagenes_galeria[] = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' fill='%23999' text-anchor='middle' dy='.3em'%3EImagen no disponible%3C/text%3E%3C/svg%3E";
-            }
-            ?>
-            
-            <!-- Imagen grande (primera) -->
-            <div class="gallery-item main-image">
-                <img src="<?= htmlspecialchars($imagenes_galeria[0]) ?>" alt="<?= htmlspecialchars($pub['titulo']) ?>">
-            </div>
-            
-            <!-- 4 imágenes pequeñas -->
-            <?php for ($i = 1; $i < 5; $i++): ?>
-                <div class="gallery-item small-image">
-                    <img src="<?= htmlspecialchars($imagenes_galeria[$i]) ?>" alt="<?= htmlspecialchars($pub['titulo']) ?> - Imagen <?= $i+1 ?>">
-                    <?php if ($i === 4 && count($imagenes) > 5): ?>
-                        <button class="view-more" onclick="abrirTodasFotos()">
-                            <i class="fas fa-th"></i> +<?= count($imagenes) - 5 ?> más
-                        </button>
-                    <?php endif; ?>
+        <!-- GALERÍA - 1 GRANDE + 4 PEQUEÑAS -->
+        <div class="gallery-container">
+            <div class="gallery-grid">
+                <?php 
+                // Asegurar que tenemos al menos 5 imágenes
+                $imagenes_galeria = $imagenes;
+                while (count($imagenes_galeria) < 5) {
+                    $imagenes_galeria[] = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' fill='%23999' text-anchor='middle' dy='.3em'%3EImagen no disponible%3C/text%3E%3C/svg%3E";
+                }
+                ?>
+                
+                <!-- Imagen grande (primera) -->
+                <div class="gallery-item main-image">
+                    <img src="<?= htmlspecialchars($imagenes_galeria[0]) ?>" alt="<?= htmlspecialchars($pub['titulo']) ?>">
                 </div>
-            <?php endfor; ?>
+                
+                <!-- 4 imágenes pequeñas -->
+                <?php for ($i = 1; $i < 5; $i++): ?>
+                    <div class="gallery-item small-image">
+                        <img src="<?= htmlspecialchars($imagenes_galeria[$i]) ?>" alt="<?= htmlspecialchars($pub['titulo']) ?> - Imagen <?= $i+1 ?>">
+                        <?php if ($i === 4 && count($imagenes) > 5): ?>
+                            <button class="view-more" onclick="abrirTodasFotos()">
+                                <i class="fas fa-th"></i> +<?= count($imagenes) - 5 ?> más
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                <?php endfor; ?>
+            </div>
         </div>
-    </div>
 
         <div class="main-content">
-            <!-- Columna izquierda: información de la propiedad -->
+            <!-- COLUMNA IZQUIERDA -->
             <div class="property-info">
                 <h1><?= htmlspecialchars($pub['titulo']) ?></h1>
                 
                 <div class="property-meta">
                     <span class="rating-badge">
-                        <i class="fas fa-star"></i> <?= $promedio ?> · <?= count($resenas) ?> evaluaciones
+                        <i class="fas fa-star" style="color: #FFD700;"></i> <?= $promedio ?> · <?= count($resenas) ?> evaluaciones
                     </span>
                     <span>·</span>
-                    <span><?= htmlspecialchars($pub['tipo']) ?></span>
+                    <span><?= ucfirst(htmlspecialchars($pub['tipo'])) ?></span>
                     <span>·</span>
                     <span><?= htmlspecialchars($pub['ubicacion'] ?? 'Ubicación no especificada') ?></span>
                 </div>
 
-                <!-- SECCIÓN "CONOCE AL ANFITRIÓN" AGREGADA -->
-                <!-- SECCIÓN "CONOCÉ AL ANFITRIÓN" - ESTILO AIRBNB -->
+                <!-- SECCIÓN DEL ANFITRIÓN - ESTILO AIRBNB -->
                 <?php if ($propietario): ?>
                 <div class="host-section">
                     <h2>Conocé al anfitrión</h2>
@@ -1374,7 +1141,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                     <div class="host-stats">
                         <div class="stat-item">
                             <span class="stat-number"><?= rand(150, 300) ?></span>
-                            <span class-stat-label">Evaluaciones</span>
+                            <span class="stat-label">Evaluaciones</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-number"><?= number_format($promedio ?: 4.9, 2) ?>★</span>
@@ -1384,8 +1151,8 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                     
                     <div class="host-profile">
                         <img src="<?= !empty($propietario['foto']) ? $propietario['foto'] : 'media/default-avatar.png' ?>" 
-                            alt="<?= htmlspecialchars($propietario['nombre']) ?>" 
-                            class="host-avatar-large">
+                             alt="<?= htmlspecialchars($propietario['nombre']) ?>" 
+                             class="host-avatar-large">
                         <div class="host-name-title">
                             <h3><?= htmlspecialchars($propietario['nombre']) ?></h3>
                             <span class="superhost-badge-large">
@@ -1426,7 +1193,7 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                 </div>
                 <?php endif; ?>
 
-                <!-- Destacados -->
+                <!-- SERVICIOS DESTACADOS -->
                 <div class="amenities">
                     <h3>Lo que ofrece este lugar</h3>
                     <div class="amenities-grid">
@@ -1468,13 +1235,12 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                     </button>
                 </div>
 
-                <!-- Descripción -->
+                <!-- DESCRIPCIÓN -->
                 <div class="description">
                     <p><?= nl2br(htmlspecialchars($pub['descripcion'])) ?></p>
                 </div>
 
-                <!-- Mapa -->
-                <!-- Mapa con OpenStreetMap (gratis) -->
+                <!-- MAPA -->
                 <div class="map-section">
                     <h3>Ubicación</h3>
                     <?php 
@@ -1493,17 +1259,16 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                 <!-- SECCIÓN DE RESEÑAS -->
                 <div class="reviews-section">
                     <div class="reviews-header">
-                        <i class="fas fa-star" style="color: #4CAF50;"></i>
+                        <i class="fas fa-star" style="color: #FFD700;"></i>
                         <h2><?= $promedio ?> · <?= count($resenas) ?> evaluaciones</h2>
                     </div>
 
-                    <!-- Reseñas en horizontal -->
                     <?php if (count($resenas) > 0): ?>
                         <div class="reviews-grid">
                             <?php foreach ($resenas as $resena): ?>
                                 <div class="review-card">
                                     <div class="reviewer-info">
-                                        <img src="<?= htmlspecialchars($resena['usuario_foto'] ?? 'media/default-avatar.png') ?>" 
+                                        <img src="<?= htmlspecialchars($resena['usuario_foto']) ?>" 
                                              alt="<?= htmlspecialchars($resena['usuario_nombre']) ?>" 
                                              class="reviewer-avatar">
                                         <div class="reviewer-details">
@@ -1522,85 +1287,82 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                         </div>
                     <?php else: ?>
                         <div style="text-align: center; color: #999; padding: 40px;">
-                            <i class="fas fa-star" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3; color: #4CAF50;"></i>
+                            <i class="fas fa-star" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3; color: #FFD700;"></i>
                             <p>No hay reseñas aún. ¡Sé el primero en opinar!</p>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Columna derecha: tarjeta de reserva -->
-            <div class="booking-card">
-                <!-- Tarjeta con información del propietario y contacto -->
-                <div class="owner-card">
-                    <div class="owner-card-header">
-                        <h3>Información de contacto</h3>
-                    </div>
-                    
-                    <?php if ($propietario): ?>
-                    <div class="owner-card-profile">
-                        <img src="<?= !empty($propietario['foto']) ? $propietario['foto'] : 'media/default-avatar.png' ?>" 
-                            alt="<?= htmlspecialchars($propietario['nombre']) ?>" 
-                            class="owner-avatar">
-                        <div class="owner-info">
-                            <h4><?= htmlspecialchars($propietario['nombre']) ?></h4>
-                            <span class="owner-badge"><i class="fas fa-check-circle"></i> Propietario verificado</span>
-                        </div>
-                    </div>
-                    
-                    <div class="owner-contact-info">
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <div>
-                                <strong>Teléfono</strong>
-                                <span><?= !empty($propietario['telefono']) ? $propietario['telefono'] : 'No disponible' ?></span>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <strong>Email</strong>
-                                <span><?= !empty($propietario['correo']) ? $propietario['correo'] : 'No disponible' ?></span>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div>
-                                <strong>Ubicación</strong>
-                                <span>Nonogasta, La Rioja</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="owner-actions">
-                        <a href="tel:<?= $propietario['telefono'] ?? '' ?>" class="btn-llamar <?= empty($propietario['telefono']) ? 'disabled' : '' ?>">
-                            <i class="fas fa-phone-alt"></i> Llamar
-                        </a>
-                        <a href="mailto:<?= $propietario['correo'] ?? '' ?>" class="btn-email <?= empty($propietario['correo']) ? 'disabled' : '' ?>">
-                            <i class="fas fa-envelope"></i> Enviar email
-                        </a>
-                    </div>
-                    
-                    <div class="owner-note">
-                        <i class="fas fa-info-circle"></i>
-                        Para comunicarte, utiliza los datos de contacto proporcionados por el propietario.
-                    </div>
-                    
-                    <?php else: ?>
-                    <div style="text-align: center; padding: 20px; color: #999;">
-                        <i class="fas fa-user-slash" style="font-size: 40px; margin-bottom: 10px;"></i>
-                        <p>Información del propietario no disponible</p>
-                    </div>
-                    <?php endif; ?>
+            <!-- COLUMNA DERECHA - TARJETA DEL PROPIETARIO -->
+            <div class="owner-card">
+                <div class="owner-card-header">
+                    <h3><i class="fas fa-user-circle"></i> Información de contacto</h3>
                 </div>
+                
+                <?php if ($propietario): ?>
+                <div class="owner-card-profile">
+                    <img src="<?= !empty($propietario['foto']) ? $propietario['foto'] : 'media/default-avatar.png' ?>" 
+                         alt="<?= htmlspecialchars($propietario['nombre']) ?>" 
+                         class="owner-avatar">
+                    <div class="owner-info">
+                        <h4><?= htmlspecialchars($propietario['nombre']) ?></h4>
+                        <span class="owner-badge"><i class="fas fa-check-circle"></i> Propietario verificado</span>
+                    </div>
+                </div>
+                
+                <div class="owner-contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Teléfono</strong>
+                            <span><?= !empty($propietario['telefono']) ? $propietario['telefono'] : 'No disponible' ?></span>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <span><?= !empty($propietario['correo']) ? $propietario['correo'] : 'No disponible' ?></span>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Ubicación</strong>
+                            <span>Nonogasta, La Rioja</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="owner-actions">
+                    <a href="tel:<?= $propietario['telefono'] ?? '' ?>" class="btn-llamar <?= empty($propietario['telefono']) ? 'disabled' : '' ?>">
+                        <i class="fas fa-phone-alt"></i> Llamar
+                    </a>
+                    <a href="mailto:<?= $propietario['correo'] ?? '' ?>" class="btn-email <?= empty($propietario['correo']) ? 'disabled' : '' ?>">
+                        <i class="fas fa-envelope"></i> Enviar email
+                    </a>
+                </div>
+                
+                <div class="owner-note">
+                    <i class="fas fa-info-circle"></i>
+                    Para comunicarte, utiliza los datos de contacto proporcionados por el propietario.
+                </div>
+                
+                <?php else: ?>
+                <div style="text-align: center; padding: 20px; color: #999;">
+                    <i class="fas fa-user-slash" style="font-size: 40px; margin-bottom: 10px;"></i>
+                    <p>Información del propietario no disponible</p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- FORMULARIO PARA NUEVA RESEÑA -->
         <div class="review-form-section">
-            <h3>Deja tu opinión</h3>
+            <h3><i class="fas fa-star" style="color: #FFD700;"></i> Deja tu opinión</h3>
             
             <?php if (isset($_SESSION['id']) && $yaOpino): ?>
                 <div class="ya-opino">
@@ -1612,18 +1374,14 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
                     <input type="hidden" name="propiedad_id" value="<?= $id ?>">
                     
                     <div class="rating">
-                        <input type="radio" name="rating" id="star5" value="5">
+                        <input type="radio" name="rating" id="star5" value="5" required>
                         <label for="star5"></label>
-
                         <input type="radio" name="rating" id="star4" value="4">
                         <label for="star4"></label>
-
                         <input type="radio" name="rating" id="star3" value="3">
                         <label for="star3"></label>
-
                         <input type="radio" name="rating" id="star2" value="2">
                         <label for="star2"></label>
-
                         <input type="radio" name="rating" id="star1" value="1">
                         <label for="star1"></label>
                     </div>
@@ -1652,11 +1410,11 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
         </div>
     </main>
 
-    <!-- MODAL para todos los servicios -->
+    <!-- MODAL DE SERVICIOS -->
     <div id="modalServicios" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarModalServicios()">&times;</span>
-            <h2>Todos los servicios</h2>
+            <h2><i class="fas fa-concierge-bell"></i> Todos los servicios</h2>
             
             <div class="services-category">
                 <h3>Muebles de exterior</h3>
@@ -1700,72 +1458,48 @@ $mensajeError = isset($_GET['resena']) && $_GET['resena'] == 'error';
     </div>
 
     <script>
+    // Función para abrir login y recordar intención de reseña
     window.abrirLoginYRecordar = function(idPropiedad) {
         sessionStorage.setItem('intencionResena', 'true');
         sessionStorage.setItem('propiedadId', idPropiedad);
         
-        if (typeof window.abrirLogin === 'function') {
-            window.abrirLogin();
-        } else {
-            const loginBtn = document.querySelector('#abrirLogin');
-            if (loginBtn) {
-                loginBtn.click();
-            }
+        const loginBtn = document.querySelector('#abrirLogin');
+        if (loginBtn) {
+            loginBtn.click();
         }
     };
 
-    // Sistema de medias estrellas
-document.addEventListener('DOMContentLoaded', function() {
-    const ratingLabels = document.querySelectorAll('.rating label');
-    const ratingInputs = document.querySelectorAll('.rating input');
-    
-    ratingLabels.forEach(label => {
-        let timeout;
+    // Verificar si venimos de un login exitoso
+    document.addEventListener('DOMContentLoaded', function() {
+        const intentoResena = sessionStorage.getItem('intencionResena');
+        const propiedadId = sessionStorage.getItem('propiedadId');
         
-        label.addEventListener('click', function(e) {
-            const input = document.getElementById(this.getAttribute('for'));
-            const isHalf = e.offsetX < this.offsetWidth / 2;
-            
-            if (isHalf) {
-                // Media estrella - redondear hacia abajo si es .5
-                const value = parseFloat(input.value);
-                if (Number.isInteger(value)) {
-                    input.value = value - 0.5;
-                } else {
-                    input.value = Math.ceil(value);
+        <?php if (isset($_SESSION['id'])): ?>
+            if (intentoResena === 'true' && propiedadId == <?= $id ?>) {
+                sessionStorage.removeItem('intencionResena');
+                sessionStorage.removeItem('propiedadId');
+                
+                const formulario = document.getElementById('formResena');
+                if (formulario) {
+                    formulario.scrollIntoView({ behavior: 'smooth' });
                 }
             }
-        });
-        
-        label.addEventListener('mousemove', function(e) {
-            clearTimeout(timeout);
-            const isHalf = e.offsetX < this.offsetWidth / 2;
-            
-            // Resaltar media estrella
-            ratingLabels.forEach(l => l.classList.remove('half-selected'));
-            if (isHalf) {
-                this.classList.add('half-selected');
-            }
-        });
-        
-        label.addEventListener('mouseleave', function() {
-            timeout = setTimeout(() => {
-                ratingLabels.forEach(l => l.classList.remove('half-selected'));
-            }, 100);
-        });
+        <?php endif; ?>
     });
-});
 
+    // Función para ver todas las fotos
     function abrirTodasFotos() {
-        alert('Función para ver todas las fotos - Implementar galería');
+        alert('Función para ver todas las fotos - Implementar galería completa');
     }
 
+    // Función para contactar al anfitrión
     function contactarAnfitrion(id) {
-        alert('Contactar al anfitrión ID: ' + id);
-    }
-
-    function verPerfilAnfitrion(id) {
-        window.location.href = 'perfil_propietario.php?id=' + id;
+        const email = '<?= $propietario['correo'] ?? '' ?>';
+        if (email) {
+            window.location.href = 'mailto:' + email;
+        } else {
+            alert('Información de contacto no disponible');
+        }
     }
 
     // Funciones para el modal de servicios
